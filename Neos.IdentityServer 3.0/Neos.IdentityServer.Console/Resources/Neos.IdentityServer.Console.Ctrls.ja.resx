@@ -121,10 +121,10 @@
     <value>すべてのフェデレーション サービスを再開する</value>
   </data>
   <data name="CRTLADFSRESTARTSERVICES" xml:space="preserve">
-    <value>フェディアションサービスを再開する</value>
+    <value>フェデレーション サービスを再開する</value>
   </data>
   <data name="CRTLADFSSTARTSERVICES" xml:space="preserve">
-    <value>フェディアションサービスを開始する</value>
+    <value>フェデレーション サービスを開始する</value>
   </data>
   <data name="CRTLADFSSTOPSERVICES" xml:space="preserve">
     <value>フェデレーション サービスの停止</value>
@@ -133,7 +133,7 @@
     <value>登録通知</value>
   </data>
   <data name="CTRGLMANAGEREGEND" xml:space="preserve">
-    <value>終わり</value>
+    <value>終了</value>
   </data>
   <data name="CTRGLMANAGEREGSTART" xml:space="preserve">
     <value>開始</value>
@@ -358,16 +358,16 @@
     <value>リプレイ保護レベル</value>
   </data>
   <data name="CTRLGLSHOWAUTHY" xml:space="preserve">
-    <value>認証認証を表示する</value>
+    <value>Authy Authenticatorを表示する</value>
   </data>
   <data name="CTRLGLSHOWGOOGLE" xml:space="preserve">
-    <value>グーグル認証器を表示する</value>
+    <value>Google Authenticatorを表示する</value>
   </data>
   <data name="CTRLGLSHOWMICROSOFT" xml:space="preserve">
-    <value>マイクロソフト認証システムを表示する</value>
+    <value>Microsoft Authenticatorを表示する</value>
   </data>
   <data name="CTRLGLUSEAPPS" xml:space="preserve">
-    <value>認証アプリケーションを使用する (Google 認証システム、マイクロソフト認証システム)</value>
+    <value>認証アプリケーションを使用する (Google Authenticator、Microsoft Authenticator)</value>
   </data>
   <data name="CTRLGLUSEMAILS" xml:space="preserve">
     <value>電子メール通知を使用する</value>
@@ -418,7 +418,7 @@
     <value>有効期間</value>
   </data>
   <data name="CTRLSECCERTIFICATES" xml:space="preserve">
-    <value>証明 書</value>
+    <value>証明書</value>
   </data>
   <data name="CTRLSECCERTPERUSER" xml:space="preserve">
     <value>ユーザーごとに 1 つの証明書を使用する</value>
@@ -478,7 +478,7 @@
     <value>ポート</value>
   </data>
   <data name="CTRLSECWSMANSHELLURI" xml:space="preserve">
-    <value>シェルウリ</value>
+    <value>シェルUri</value>
   </data>
   <data name="CTRLSECWSMANTIMEOUT" xml:space="preserve">
     <value>タイムアウト</value>
@@ -502,7 +502,7 @@
     <value>パラメーター</value>
   </data>
   <data name="CTRLSMSSHA1" xml:space="preserve">
-    <value>SHA1塩</value>
+    <value>SHA1暗号</value>
   </data>
   <data name="CTRLSMSTIMEOUT" xml:space="preserve">
     <value>タイムアウト</value>
@@ -520,7 +520,7 @@
     <value>配信通知 (エラー)</value>
   </data>
   <data name="CTRLSMTPFROM" xml:space="preserve">
-    <value>管理上の連絡先 (出身)</value>
+    <value>管理上の連絡先 (送信元)</value>
   </data>
   <data name="CTRLSMTPIDENTIFICATION" xml:space="preserve">
     <value>識別</value>
@@ -595,7 +595,7 @@
     <value>テスト</value>
   </data>
   <data name="CTRLSQLTHUMBPRINT" xml:space="preserve">
-    <value>証明書のサンプリント</value>
+    <value>証明書の拇印</value>
   </data>
   <data name="CTRLSQLUSING" xml:space="preserve">
     <value>SQL サーバー構成を使用する</value>
