@@ -130,7 +130,7 @@
     <value>フェデレーション サービスの停止</value>
   </data>
   <data name="CTRGLMANAGEREG" xml:space="preserve">
-    <value>登録通知</value>
+    <value>&gt;終了</value>
   </data>
   <data name="CTRGLMANAGEREGEND" xml:space="preserve">
     <value>終了</value>
@@ -675,22 +675,16 @@
   <data name="CTRLWEBAUTHNSHOWPII" xml:space="preserve">
     <value>機密ログを表示する</value>
   </data>
-  <data name="CTRLPROVPINNONE" xml:space="preserve">
-    <value>未確認の場合に必要</value>
+  <data name="CTRLGLTOTPWARN" xml:space="preserve">
+    <value>rfc6238 サポート - 認証アプリはサポートする必要があります (Yubico、 Authy)</value>
   </data>
-  <data name="CTRLPROVPINANDROID" xml:space="preserve">
-    <value>未確認の場合に必要</value>
+  <data name="CTRLGLDURATION" xml:space="preserve">
+    <value>期間</value>
   </data>
-  <data name="CTRLPROVPINSAFETYNET" xml:space="preserve">
-    <value>未確認の場合に必要</value>
+  <data name="CTRLGLMAXDIGITS" xml:space="preserve">
+    <value>桁</value>
   </data>
-  <data name="CTRLPROVPINFIDO" xml:space="preserve">
-    <value>未確認の場合に必要</value>
-  </data>
-  <data name="CTRLPROVPINPACKED" xml:space="preserve">
-    <value>未確認の場合に必要</value>
-  </data>
-  <data name="CTRLPROVPINTPM" xml:space="preserve">
-    <value>未確認の場合に必要</value>
+  <data name="CTRLPROVPINREQUIRED" xml:space="preserve">
+    <value>ユーザーのプレゼンスが検出されない場合に特定の認証システムの PIN を有効にする</value>
   </data>
 </root>

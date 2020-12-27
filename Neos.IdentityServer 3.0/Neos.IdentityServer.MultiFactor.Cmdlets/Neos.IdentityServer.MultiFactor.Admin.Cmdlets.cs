@@ -3586,6 +3586,10 @@ namespace MFA
                                 _target0.KeySize = (KeySizeMode)_config0.KeySize;
                             if (_config0.SecretFormatChanged)
                                 _target0.KeysFormat = (SecretKeyFormat)_config0.KeysFormat;
+                            if (_config0.DigitsChanged)
+                                _target0.Digits = _config0.Digits;
+                            if (_config0.DurationChanged)
+                                _target0.Duration = _config0.Duration;
                             break;
                         case PSProviderType.Email:
                             _target1 = new FlatMailProvider();
@@ -3856,6 +3860,8 @@ namespace MFA
         private string _fullyqualifiedimplementation;
         private string _parameters;
         private int _totpshadows = 2;
+        private int _digits = 6;
+        private int _duration = 30;
         private PSHashMode _algorithm = PSHashMode.SHA1;
         private PSOTPWizardOptions _wizardoptions = PSOTPWizardOptions.All;
         private PSSecretKeyFormat _secretformat = PSSecretKeyFormat.RNG;
@@ -3871,9 +3877,10 @@ namespace MFA
         internal bool EnabledChanged { get; private set; }
         internal bool EnrollWizardChanged { get; private set; }
         internal bool WizardOptionsChanged { get; private set; }      
-
         internal bool KeySizeModeChanged { get; private set; }
         internal bool SecretFormatChanged { get; private set; }
+        internal bool DigitsChanged { get; private set; }
+        internal bool DurationChanged { get; private set; }
 
         /// <summary>
         /// <para type="description">Provider Enabled property.</para>
@@ -4007,6 +4014,36 @@ namespace MFA
             {
                 _algorithm = value;
                 AlgorithmChanged = true;
+            }
+        }
+
+        /// <summary>
+        /// <para type="description">TOTP Provider Code len between 4 and 8. 6 by default</para>
+        /// </summary>
+        [Parameter(ParameterSetName = "Identity")]
+        [ValidateRange(4, 8)]
+        public int Digits
+        {
+            get { return _digits; }
+            set
+            {
+                _digits = value;
+                DigitsChanged = true;
+            }
+        }
+
+        /// <summary>
+        /// <para type="description">TOTP Provider Code renew duration in seconds. 30s by default</para>
+        /// </summary>
+        [Parameter(ParameterSetName = "Identity")]
+        [ValidateSet("30", "60", "90", "120", "150", "180")]
+        public int Duration
+        {
+            get { return _duration; }
+            set
+            {
+                _duration = value;
+                DurationChanged = true;
             }
         }
 
@@ -5311,6 +5348,12 @@ namespace MFA
                                 _target3.UserVerificationIndex = _config3.UserVerificationIndex;
                             if (_config3.UserVerificationMethodChanged)
                                 _target3.UserVerificationMethod = _config3.UserVerificationMethod;
+                            if (_config3.CredProtectChanged)
+                                _target3.CredProtect = _config3.CredProtect;
+                            if (_config3.EnforceCredProtectChanged)
+                                _target3.EnforceCredProtect = _config3.EnforceCredProtect;
+                            if (_config3.HmacSecretChanged)
+                                _target3.HmacSecret = _config3.HmacSecret;
                             break;
                         case PSSecurityMode.WSMAN:
                             _target6 = new FlatWsManSecurity();
@@ -5491,6 +5534,9 @@ namespace MFA
         private bool _location;
         private bool _userverificationmethod;
         private bool _requireresidentkey;
+        private bool? _hmacsecret;
+        private WebAuthNUserVerification? _credprotect;
+        private bool? _enforcecredprotect;
 
         internal bool RequireResidentKeyChanged { get; private set; }
         internal bool UserVerificationMethodChanged { get; private set; }
@@ -5500,6 +5546,9 @@ namespace MFA
         internal bool UserVerificationRequirementChanged { get; private set; }
         internal bool AttestationConveyancePreferenceChanged { get; private set; }
         internal bool AuthenticatorAttachmentChanged { get; private set; }
+        internal bool HmacSecretChanged { get; private set; }
+        internal bool CredProtectChanged { get; private set; }
+        internal bool EnforceCredProtectChanged { get; private set; }
 
         /// <summary>
         /// <para type="description">Authenticator Attachment property (empty, Platform, Crossplatform).</para>
@@ -5618,6 +5667,48 @@ namespace MFA
             {
                 _requireresidentkey = value;
                 RequireResidentKeyChanged = true;
+            }
+        }
+
+        /// <summary>
+        /// <para type="description">Use HMAC enryption (CATP2.1).</para>
+        /// </summary>
+        [Parameter(ParameterSetName = "Identity")]
+        public bool? HmacSecret
+        {
+            get { return _hmacsecret; }
+            set
+            {
+                _hmacsecret = value;
+                HmacSecretChanged = true;
+            }
+        }
+
+        /// <summary>
+        /// <para type="description">Use Credential Protection (CATP2.1).</para>
+        /// </summary>
+        [Parameter(ParameterSetName = "Identity")]
+        public WebAuthNUserVerification? CredProtect
+        {
+            get { return _credprotect; }
+            set
+            {
+                _credprotect = value;
+                CredProtectChanged = true;
+            }
+        }
+
+        /// <summary>
+        /// <para type="description">Enforce Credential Protection (CATP2.1).</para>
+        /// </summary>
+        [Parameter(ParameterSetName = "Identity")]
+        public bool? EnforceCredProtect
+        {
+            get { return _enforcecredprotect; }
+            set
+            {
+                _enforcecredprotect = value;
+                EnforceCredProtectChanged = true;
             }
         }
     }
@@ -5980,6 +6071,63 @@ namespace MFA
     }
     #endregion
 
+    #region Reset-MFAThemesList
+    /// <summary>
+    /// <para type="synopsis">Reset ADFS Relying Parties Themes for MFA (Reload).</para>
+    /// <para type="description">Force Reload for ADFS Relying Parties Themes for MFA.</para>
+    /// </summary>
+    /// <example>
+    ///   <para>Reset-MFAThemesList</para>
+    /// </example>
+    [Cmdlet(VerbsCommon.Reset, "MFAThemesList", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High, RemotingCapability = RemotingCapability.None, DefaultParameterSetName = "Data")]
+    [PrimaryServerRequired]
+    public sealed class ResetMFAThemesList : MFACmdlet
+    {
+        /// <summary>
+        /// BeginProcessing method implementation
+        /// </summary>
+        protected override void BeginProcessing()
+        {
+            base.BeginProcessing();
+            try
+            {
+                ManagementService.Initialize(this.Host, true);
+            }
+            catch (Exception ex)
+            {
+                this.ThrowTerminatingError(new ErrorRecord(ex, "3023", ErrorCategory.OperationStopped, this));
+            }
+        }
+
+        /// <summary>
+        /// ProcessRecord method override
+        /// </summary>
+        protected override void ProcessRecord()
+        {
+            if (ShouldProcess("MFA Reset/Reload Relying Parties Themes"))
+            {
+                try
+                {
+                    ManagementService.ResetWebThemesList(this.Host);
+                    this.WriteVerbose(infos_strings.InfosConfigUpdated);
+                }
+                catch (Exception ex)
+                {
+                    this.ThrowTerminatingError(new ErrorRecord(ex, "3024", ErrorCategory.OperationStopped, this));
+                }
+            }
+        }
+
+        /// <summary>
+        /// StopProcessing method implementation
+        /// </summary>
+        protected override void StopProcessing()
+        {
+            base.StopProcessing();
+        }
+    }
+    #endregion
+
     #region Set-MFAEncryptionVersion
     /// <summary>
     /// <para type="synopsis">Set ADFS Theme.</para>
@@ -6076,6 +6224,12 @@ namespace MFA
         public bool Enabled { get; set; } = false;
 
         /// <summary>
+        /// <para type="description">Set Primary Authentication Status Options.</para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 1, ParameterSetName = "Data", ValueFromPipeline = false)]
+        public PrimaryAuthOptions Options { get; set; } = PrimaryAuthOptions.None;
+
+        /// <summary>
         /// BeginProcessing method implementation
         /// </summary>
         protected override void BeginProcessing()
@@ -6102,7 +6256,7 @@ namespace MFA
             {
                 try
                 {
-                    _config.SetPrimaryAuthenticationStatus(this.Host, Enabled);
+                    _config.SetPrimaryAuthenticationStatus(this.Host, Enabled, Options);
                     this.WriteVerbose(infos_strings.InfosConfigUpdated);
                 }
                 catch (Exception ex)

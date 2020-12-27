@@ -64,7 +64,7 @@ namespace Neos.IdentityServer.MultiFactor
             : base(provider, context, message, suite, disableoptions)
         {
         }
-        #endregion
+        #endregion 
 
         #region CSS
         /// <summary>
@@ -97,16 +97,17 @@ namespace Neos.IdentityServer.MultiFactor
             result += "-moz-user-select: none;";
             result += "-o-user-select: none;";
             result += "user-select:none;";
-            result += "}" + CR;
+            result += "}" + CR + CR;
 
             result += "#buttonquit:hover {";
             result += "background-color:rgb(170, 0, 0);";
-            result += "}" + CR;
+            result += "}" + CR+ CR;
 
             string baseresult = base.GetFormPreRenderHtmlCSS(usercontext, true);
             if (!removetag)
-                return "<style>" + baseresult + result + "</style>";
-            return result + CR;
+                return "<style>" + baseresult + result + "</style>" + CR + CR;
+            else
+                return result ;
         }
         #endregion
 
@@ -120,7 +121,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function SetLinkData(frm, data)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('lnk');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   if (lnk)" + CR;
             result += "   {" + CR;
             result += "      lnk.value = data;" + CR;
@@ -144,7 +145,7 @@ namespace Neos.IdentityServer.MultiFactor
             if ((prov != null) && (prov.IsUIElementRequired(usercontext, RequiredMethodElements.CodeInputRequired)))
             {
                 result += "<div id=\"wizardMessage\" class=\"groupMargin\">" + prov.GetUILabel(usercontext) + "</div>";
-                result += "<input id=\"totp\" name=\"totp\" type=\"password\" placeholder=\"Code\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
+                result += "<input id=\"##ACCESSCODE##\" name=\"##ACCESSCODE##\" type=\"password\" placeholder=\"Code\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
                 result += "<div class=\"fieldMargin smallText\">" + prov.GetUIMessage(usercontext) + "</div><br/>";
                 if (!string.IsNullOrEmpty(prov.GetUIWarningThirdPartyLabel(usercontext)) && (usercontext.IsSendBack))
                     result += "<div class=\"error smallText\">" + prov.GetUIWarningThirdPartyLabel(usercontext) + "</div><br/>";
@@ -152,20 +153,20 @@ namespace Neos.IdentityServer.MultiFactor
             if ((prov != null) && (prov.IsUIElementRequired(usercontext, RequiredMethodElements.PinParameterRequired)))
             {
                 result += "<div id=\"wizardMessage2\" class=\"groupMargin\">" + BaseExternalProvider.GetPINLabel(usercontext) + "</div>";
-                result += "<input id=\"pincode\" name=\"pincode\" type=\"password\" placeholder=\"PIN Number\" class=\"text fullWidth\" /><br/>";
+                result += "<input id=\"##PINCODE##\" name=\"##PINCODE##\" type=\"password\" placeholder=\"PIN Number\" class=\"text fullWidth\" /><br/>";
                 result += "<div class=\"fieldMargin smallText\">" + BaseExternalProvider.GetPINMessage(usercontext) + "</div><br/>";
             }
 
-            if (Provider.HasAccessToOptions(prov))
+            if (Provider.Config.UserFeatures.CanAccessOptions())
             {
-                if (usercontext.ShowOptions)
-                    result += "<input id=\"options\" type=\"checkbox\" name=\"Options\" checked=\"true\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMAccessOptions") + "<br/><br/><br/>";
-                else
-                    result += "<input id=\"options\" type=\"checkbox\" name=\"Options\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMAccessOptions") + "<br/><br/><br/>";
+                if (Provider.HasAccessToOptions(prov))
+                    result += "<input id=\"##OPTIONS##\" type=\"checkbox\" name=\"##OPTIONS##\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMAccessOptions");
+                result += "<br/><br/><br/>";
             }
+
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
-            result += "<input id=\"lnk\" type=\"hidden\" name=\"lnk\" value=\"0\"/>";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"0\"/>";
             result += "<input id=\"continueButton\" type=\"submit\" class=\"submit\" name=\"Continue\" value=\"" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMConnexion") + "\" /><br/><br/>";
             if (RuntimeAuthProvider.GetActiveProvidersCount() > 1)
                 result += "<a class=\"actionLink\" href=\"#\" id=\"nocode\" name=\"nocode\" onclick=\"return SetLinkData(IdentificationForm, '3')\"; style=\"cursor: pointer;\">" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMNoCode") + "</a>";
@@ -185,7 +186,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnlinkclicked(frm, data)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = data;" + CR;
             result += "   frm.submit();" + CR;
             result += "   return true;" + CR;
@@ -193,7 +194,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnbtnclicked(id)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "   return true;" + CR;
             result += "}" + CR;
@@ -220,7 +221,7 @@ namespace Neos.IdentityServer.MultiFactor
             {
                 result += "<a class=\"actionLink\" href=\"#\" id=\"enrollbio\" name=\"enrollbio\" onclick=\"fnlinkclicked(OptionsForm, 6)\" style=\"cursor: pointer;\">" + prov4.GetWizardLinkLabel(usercontext) + "</a>";
             }
-            if (!Provider.Config.IsPrimaryAuhentication)
+            if ((!Provider.Config.IsPrimaryAuhentication) || (Provider.Config.PrimaryAuhenticationOptions.HasFlag(PrimaryAuthOptions.Externals)))
             {
                 IExternalProvider prov2 = RuntimeAuthProvider.GetProvider(PreferredMethod.Email);
                 if ((prov2 != null) && (prov2.Enabled) && prov2.IsUIElementRequired(usercontext, RequiredMethodElements.EmailLinkRequired))
@@ -250,12 +251,12 @@ namespace Neos.IdentityServer.MultiFactor
                 result += GetPartHtmlSelectMethod(usercontext);
                 result += "<br/>";
             }
-            if (!Provider.Config.IsPrimaryAuhentication)
+            if ((!Provider.Config.IsPrimaryAuhentication) || (Provider.Config.PrimaryAuhenticationOptions.HasFlag(PrimaryAuthOptions.Register)))
             {
 
                 if (!Provider.Config.UserFeatures.IsMFARequired() && !Provider.Config.UserFeatures.IsMFAMixed())
                 {
-                    result += "<input id=\"disablemfa\" type=\"checkbox\" name=\"disablemfa\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMDisableMFA");
+                    result += "<input id=\"##DISABLEMFA##\" type=\"checkbox\" name=\"##DISABLEMFA##\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMDisableMFA");
                     result += "<br/>";
                 }
             }
@@ -263,7 +264,7 @@ namespace Neos.IdentityServer.MultiFactor
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
 
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"0\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"0\" />";
 
             result += "<table><tr>";
             result += "<td>";
@@ -299,7 +300,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnbtnclicked(id)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "}" + CR;
 
@@ -406,7 +407,7 @@ namespace Neos.IdentityServer.MultiFactor
                     break;
                 case EnrollPageStatus.Stop:
                     result += "<br/>";
-                    result += "<p style=\"text-align:center\"><img id=\"msgreen\" src=\"data:image/png;base64," + Convert.ToBase64String(images.cvert.ToByteArray(ImageFormat.Jpeg)) + "\"/></p><br/><br/>";
+                    result += "<p style=\"text-align:center\"><img id=\"msgreen\" src=\"data:image/png;base64," + Convert.ToBase64String(images.cvert.ToByteArray(ImageFormat.Png)) + "\"/></p><br/><br/>";
                     result += "<div id=\"lbl\" class=\"fieldMargin smallText\">" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlLabelVERIFYOTPSuccess") + "</div><br/>";
                     List<IExternalProvider> lst2 = RuntimeAuthProvider.GeActiveProvidersList();
                     if (lst2.Count > 0)
@@ -454,8 +455,8 @@ namespace Neos.IdentityServer.MultiFactor
                     break;
             }
 
-            result += "<input id=\"isprovider\" type=\"hidden\" name=\"isprovider\" value=\"" + (int)m + "\" />";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"0\" />";
+            result += "<input id=\"##ISPROVIDER##\" type=\"hidden\" name=\"##ISPROVIDER##\" value=\"" + (int)m + "\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"0\" />";
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
 
@@ -480,7 +481,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnbtnclicked(id)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "}" + CR;
 
@@ -592,7 +593,7 @@ namespace Neos.IdentityServer.MultiFactor
                     break;
                 case EnrollPageStatus.Stop:
                     result += "<br/>";
-                    result += "<p style=\"text-align:center\"><img id=\"msgreen\" src=\"data:image/png;base64," + Convert.ToBase64String(images.cvert.ToByteArray(ImageFormat.Jpeg)) + "\"/></p><br/><br/>";
+                    result += "<p style=\"text-align:center\"><img id=\"msgreen\" src=\"data:image/png;base64," + Convert.ToBase64String(images.cvert.ToByteArray(ImageFormat.Png)) + "\"/></p><br/><br/>";
                     result += "<div id=\"lbl\" class=\"fieldMargin smallText\">" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlLabelVERIFYOTPSuccess") + "</div><br/>";
                     List<IExternalProvider> lst2 = RuntimeAuthProvider.GeActiveProvidersList();
                     if (lst2.Count > 0)
@@ -640,8 +641,8 @@ namespace Neos.IdentityServer.MultiFactor
                     break;
             }
 
-            result += "<input id=\"isprovider\" type=\"hidden\" name=\"isprovider\" value=\"" + (int)m + "\" />";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"0\" />";
+            result += "<input id=\"##ISPROVIDER##\" type=\"hidden\" name=\"##ISPROVIDER##\" value=\"" + (int)m + "\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"0\" />";
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
 
@@ -666,7 +667,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnbtnclicked(id)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "}" + CR;
 
@@ -695,7 +696,7 @@ namespace Neos.IdentityServer.MultiFactor
             result += "</td>";
             result += "</tr></table>";
 
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"0\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"0\" />";
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
 
@@ -714,7 +715,7 @@ namespace Neos.IdentityServer.MultiFactor
             string result = "<script type='text/javascript'>" + CR;
             result += "function SetLinkTitle(frm, data)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('lnk');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTEDLINK##');" + CR;
             result += "   if (lnk)" + CR;
             result += "   {" + CR;
             result += "      lnk.value = data;" + CR;
@@ -730,7 +731,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnbtnclicked()" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = 1;" + CR;
             result += "}" + CR;
             result += "</script>" + CR;
@@ -780,7 +781,7 @@ namespace Neos.IdentityServer.MultiFactor
                     if (Provider.HasStrictAccessToOptions(prov))
                         result += "<a class=\"actionLink\" href=\"#\" id=\"enrollbio\" name=\"enrollbio\" onclick=\"return SetLinkTitle(selectoptionsForm, '4')\"; style=\"cursor: pointer;\">" + prov.GetWizardLinkLabel(usercontext) + "</a>";
                 }
-                if (!Provider.Config.IsPrimaryAuhentication)
+                if ((!Provider.Config.IsPrimaryAuhentication) || (Provider.Config.PrimaryAuhenticationOptions.HasFlag(PrimaryAuthOptions.Externals)))
                 {
 
                     if (RuntimeAuthProvider.IsUIElementRequired(usercontext, RequiredMethodElements.EmailLinkRequired))
@@ -828,8 +829,8 @@ namespace Neos.IdentityServer.MultiFactor
             result += "<br/>";
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"0\" />";
-            result += "<input id=\"lnk\" type=\"hidden\" name=\"lnk\" value=\"0\"/>";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"0\" />";
+            result += "<input id=\"##SELECTEDLINK##\" type=\"hidden\" name=\"##SELECTEDLINK##\" value=\"0\"/>";
             result += "<input id=\"saveButton\" type=\"submit\" class=\"submit\" name=\"saveButton\" value=\"" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMConnexion") + "\" onclick=\"fnbtnclicked()\"/>";
             result += "<br/>";
             result += GetFormHtmlMessageZone(usercontext);
@@ -847,7 +848,7 @@ namespace Neos.IdentityServer.MultiFactor
             string result = "<script type='text/javascript'>" + CR;
             result += "function fnbtnclicked(id)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "}" + CR;
             result += CR;
@@ -865,26 +866,26 @@ namespace Neos.IdentityServer.MultiFactor
             result += "<b><div id=\"pwdTitle\" class=\"groupMargin\">" + Resources.GetString(ResourcesLocaleKind.Titles, "MustUseCodePageTitle") + "</div></b>";
             PreferredMethod method = GetMethod4FBUsers(usercontext);
             if (RuntimeAuthProvider.IsProviderAvailableForUser(usercontext, PreferredMethod.Code))
-                result += "<input id=\"opt1\" name=\"opt\" type=\"radio\" value=\"0\" " + (((method == PreferredMethod.Code) || (method == PreferredMethod.Choose)) ? "checked=\"checked\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.Code).GetUIChoiceLabel(usercontext) + "<br/><br/>";
-            if (!Provider.Config.IsPrimaryAuhentication)
+                result += "<input id=\"opt1\" name=\"##SELECTEDRADIO##\" type=\"radio\" value=\"0\" " + (((method == PreferredMethod.Code) || (method == PreferredMethod.Choose)) ? "checked=\"checked\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.Code).GetUIChoiceLabel(usercontext) + "<br/><br/>";
+            if ((!Provider.Config.IsPrimaryAuhentication) || (Provider.Config.PrimaryAuhenticationOptions.HasFlag(PrimaryAuthOptions.Externals)))
             {
                 if (RuntimeAuthProvider.IsProviderAvailableForUser(usercontext, PreferredMethod.Email))
-                    result += "<input id=\"opt2\" name=\"opt\" type=\"radio\" value=\"2\" " + ((method == PreferredMethod.Email) ? "checked=\"checked\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.Email).GetUIChoiceLabel(usercontext) + "<br/><br/>";
+                    result += "<input id=\"opt2\" name=\"##SELECTEDRADIO##\" type=\"radio\" value=\"2\" " + ((method == PreferredMethod.Email) ? "checked=\"checked\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.Email).GetUIChoiceLabel(usercontext) + "<br/><br/>";
                 if (RuntimeAuthProvider.IsProviderAvailableForUser(usercontext, PreferredMethod.External))
-                    result += "<input id=\"opt1\" name=\"opt\" type=\"radio\" value=\"1\" " + ((method == PreferredMethod.External) ? "checked=\"checked\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.External).GetUIChoiceLabel(usercontext) + "<br/><br/>";
+                    result += "<input id=\"opt1\" name=\"##SELECTEDRADIO##\" type=\"radio\" value=\"1\" " + ((method == PreferredMethod.External) ? "checked=\"checked\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.External).GetUIChoiceLabel(usercontext) + "<br/><br/>";
                 if (RuntimeAuthProvider.IsProviderAvailableForUser(usercontext, PreferredMethod.Azure))
-                    result += "<input id=\"opt3\" name=\"opt\" type=\"radio\" value=\"3\" " + ((method == PreferredMethod.Azure) ? "checked=\"checked\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.Azure).GetUIChoiceLabel(usercontext) + "<br/><br/>";
+                    result += "<input id=\"opt3\" name=\"##SELECTEDRADIO##\" type=\"radio\" value=\"3\" " + ((method == PreferredMethod.Azure) ? "checked=\"checked\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.Azure).GetUIChoiceLabel(usercontext) + "<br/><br/>";
             }
             if (RuntimeAuthProvider.IsProviderAvailableForUser(usercontext, PreferredMethod.Biometrics))
-                result += "<input id=\"opt4\" name=\"opt\" type=\"radio\" value=\"4\" " + ((method == PreferredMethod.Biometrics) ? "checked=\"checked\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.Biometrics).GetUIChoiceLabel(usercontext) + "<br/><br/>";
+                result += "<input id=\"opt4\" name=\"##SELECTEDRADIO##\" type=\"radio\" value=\"4\" " + ((method == PreferredMethod.Biometrics) ? "checked=\"checked\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.Biometrics).GetUIChoiceLabel(usercontext) + "<br/><br/>";
 
             result += "<br/>";
             if (Provider.KeepMySelectedOptionOn())
-                result += "<input id=\"remember\" type=\"checkbox\" name=\"Remember\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember") + "<br/>";
+                result += "<input id=\"##REMEMBER##\" type=\"checkbox\" name=\"##REMEMBER##\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember") + "<br/>";
             result += "<br/>";
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\">";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\">";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"0\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"0\" />";
 
             result += "<table><tr>";
             result += "<td>";
@@ -933,13 +934,13 @@ namespace Neos.IdentityServer.MultiFactor
 
                 result += "function ValidChangePwd(frm)" + CR;
                 result += "{" + CR;
-                result += "   var lnk = document.getElementById('btnclicked');" + CR;
+                result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
                 result += "   if (lnk.value=='1')" + CR;
                 result += "   {" + CR;
                 result += "      var err = document.getElementById('errorText');" + CR;
-                result += "      var oldpwd = document.getElementById('oldpwdedit');" + CR;
-                result += "      var newpwd = document.getElementById('newpwdedit');" + CR;
-                result += "      var cnfpwd = document.getElementById('cnfpwdedit');" + CR;
+                result += "      var oldpwd = document.getElementById('##OLDPASS##');" + CR;
+                result += "      var newpwd = document.getElementById('##NEWPASS##');" + CR;
+                result += "      var cnfpwd = document.getElementById('##CNFPASS##');" + CR;
                 result += "      if (oldpwd.value == \"\")" + CR;
                 result += "      {" + CR;
                 result += "         err.innerHTML = \"" + Resources.GetString(ResourcesLocaleKind.Validation, "ValidPassActualError") + "\";" + CR;
@@ -972,7 +973,7 @@ namespace Neos.IdentityServer.MultiFactor
 
                 result += "function fnbtnclicked(id)";
                 result += "{";
-                result += "   var lnk = document.getElementById('btnclicked');";
+                result += "   var lnk = document.getElementById('##SELECTED##');";
                 result += "   lnk.value = id;";
                 result += "}";
                 result += CR;
@@ -994,17 +995,17 @@ namespace Neos.IdentityServer.MultiFactor
                 result += "<div id=\"wizardMessage\" class=\"groupMargin\">" + Resources.GetString(ResourcesLocaleKind.Titles, "PasswordPageTitle") + "</div>";
 
                 result += "<div id=\"oldpwd\"  class=\"fieldMargin smallText\">" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlPWDLabelActual") + "</div>";
-                result += "<input id=\"oldpwdedit\" name=\"oldpwdedit\" type=\"password\" class=\"text fullWidth\"/><br/><br/>";
+                result += "<input id=\"##OLDPASS##\" name=\"##OLDPASS##\" type=\"password\" class=\"text fullWidth\"/><br/><br/>";
 
                 result += "<div id=\"newpwd\" class=\"fieldMargin smallText\">" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlPWDLabelNew") + "</div>";
-                result += "<input id=\"newpwdedit\" name=\"newpwdedit\" type=\"password\" class=\"text fullWidth\"/><br/><br/>";
+                result += "<input id=\"##NEWPASS##\" name=\"##NEWPASS##\" type=\"password\" class=\"text fullWidth\"/><br/><br/>";
 
                 result += "<div id=\"cnfpwd\" class=\"fieldMargin smallText\">" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlPWDLabelNewConfirmation") + "</div>";
-                result += "<input id=\"cnfpwdedit\" name=\"cnfpwdedit\" type=\"password\" class=\"text fullWidth\"/><br/><br/>";
+                result += "<input id=\"##CNFPASS##\" name=\"##CNFPASS##\" type=\"password\" class=\"text fullWidth\"/><br/><br/>";
 
                 result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
                 result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
-                result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"1\" />";
+                result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"1\" />";
                 result += "<table><tr>";
                 result += "<td>";
                 result += "<input id=\"saveButton\" type=\"submit\" class=\"submit\" name=\"continue\" value=\"" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlPWDSave") + "\" onClick=\"fnbtnclicked(1)\" />";
@@ -1079,7 +1080,7 @@ namespace Neos.IdentityServer.MultiFactor
             {
                 result += "<form method=\"post\" id=\"bypassForm\" autocomplete=\"off\" title=\"PIN Confirmation\" >";
                 result += "<div id=\"wizardMessage2\" class=\"groupMargin\">" + BaseExternalProvider.GetPINLabel(usercontext) + " : </div>";
-                result += "<input id=\"pincode\" name=\"pincode\" type=\"password\" placeholder=\"PIN\" class=\"text fullWidth\" /><br/>";
+                result += "<input id=\"##PINCODE##\" name=\"##PINCODE##\" type=\"password\" placeholder=\"PIN\" class=\"text fullWidth\" /><br/>";
                 result += "<div class=\"fieldMargin smallText\">" + BaseExternalProvider.GetPINMessage(usercontext) + "</div><br/>";
                 result += "<input id=\"continueButton\" type=\"submit\" class=\"submit\" name=\"continueButton\" value=\"" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMConnexion") + "\" /><br/><br/>";
 
@@ -1108,7 +1109,7 @@ namespace Neos.IdentityServer.MultiFactor
             result += "<script type=\"text/javascript\">" + CR;
             result += "function fnbtnclicked(id)" + CR; ;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "}" + CR;
             result += CR;
@@ -1180,7 +1181,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"1\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"1\" />";
             result += "</form>";
             return result;
         }
@@ -1204,7 +1205,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function SetLinkTitle(frm, data)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('lnk');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTEDLINK##');" + CR;
             result += "   if (lnk)" + CR;
             result += "   {" + CR;
             result += "      lnk.value = data;" + CR;
@@ -1216,7 +1217,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function SetOptions(frm)" + CR;
             result += "{" + CR;
-            result += "   var opt = document.getElementById('useroptions');" + CR;
+            result += "   var opt = document.getElementById('##OPTIONS##');" + CR;
             result += "   if (opt)" + CR;
             result += "   {" + CR;
             result += "      if (opt.checked)" + CR;
@@ -1269,13 +1270,15 @@ namespace Neos.IdentityServer.MultiFactor
                 if (usercontext.IsTwoWay && (Provider.Config.UserFeatures.CanAccessOptions()))
                 {
                     if (Provider.HasAccessToOptions(prov))
-                        result += "<input id=\"options\" type=\"checkbox\" name=\"options\" onclick=\"SetOptions(refreshForm)\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMAccessOptions");
-                    result += "<script type='text/javascript'>document.cookie = 'showoptions=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/adfs/'</script>";
+                        result += "<input id=\"##OPTIONS##\" type=\"checkbox\" name=\"##OPTIONS##\" onclick=\"SetOptions(refreshForm)\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMAccessOptions");
+                    result += "<script>";
+                    result += "   document.cookie = 'showoptions=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/adfs/'";
+                    result += "</script>";
                     result += "<br/><br/><br/>";
                 }
 
                 result += "<a class=\"actionLink\" href=\"#\" id=\"nocode\" name=\"nocode\" onclick=\"return SetLinkTitle(refreshForm, '3')\"; style=\"cursor: pointer;\">" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMNoCode") + "</a>";
-                result += "<input id=\"lnk\" type=\"hidden\" name=\"lnk\" value=\"0\"/>";
+                result += "<input id=\"##SELECTEDLINK##\" type=\"hidden\" name=\"##SELECTEDLINK##\" value=\"0\"/>";
             }
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
@@ -1295,7 +1298,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function OnRefreshPost(response)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = 1;" + CR;
             result += "   var jsonCredentials = document.getElementById('assertionResponse');" + CR;
             result += "   jsonCredentials.value = JSON.stringify(response);" + CR;
@@ -1313,7 +1316,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function SetJsError(message)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = 2;" + CR;
             result += "   var err = document.getElementById('jserror');" + CR;
             result += "   err.value = message;" + CR;
@@ -1324,7 +1327,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function SetLinkTitle(frm, data)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('lnk');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTEDLINK##');" + CR;
             result += "   if (lnk)" + CR;
             result += "   {";
             result += "      lnk.value = data;" + CR;
@@ -1388,7 +1391,7 @@ namespace Neos.IdentityServer.MultiFactor
                 if (Provider.Config.UserFeatures.CanAccessOptions())
                 {
                     if (Provider.HasAccessToOptions(prov))
-                        result += "<input id=\"Options\" type=\"checkbox\" name=\"Options\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMAccessOptions");
+                        result += "<input id=\"##OPTIONS##\" type=\"checkbox\" name=\"##OPTIONS##\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMAccessOptions");
                     result += "<script>";
                     result += "   document.cookie = 'showoptions=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/adfs/'";
                     result += "</script>";
@@ -1396,13 +1399,13 @@ namespace Neos.IdentityServer.MultiFactor
                 }
                 result += "<input id=\"signin\" type=\"submit\" class=\"submit\" name=\"signin\" value=\"" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMConnexion") + "\" /><br/><br/>";
                 result += "<a class=\"actionLink\" href=\"#\" id=\"nocode\" name=\"nocode\" onclick=\"return SetLinkTitle(refreshbiometricForm, '3')\"; style=\"cursor: pointer;\">" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlUIMNoCode") + "</a>";
-                result += "<input id=\"lnk\" type=\"hidden\" name=\"lnk\" value=\"0\"/>";
+                result += "<input id=\"##SELECTEDLINK##\" type=\"hidden\" name=\"##SELECTEDLINK##\" value=\"0\"/>";
             }
             result += GetFormHtmlMessageZone(usercontext);
 
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"1\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"1\" />";
             result += "<input id=\"jserror\" type=\"hidden\" name=\"jserror\" value=\"\" />";
             result += "<input id=\"assertionResponse\" type=\"hidden\" name=\"assertionResponse\" />";          
             result += "</form>";
@@ -1527,7 +1530,7 @@ namespace Neos.IdentityServer.MultiFactor
             result += "<script type=\"text/javascript\">" + CR;
             result += "function fnbtnclicked(id)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "   return true;" + CR;
             result += "}" + CR;
@@ -1690,14 +1693,14 @@ namespace Neos.IdentityServer.MultiFactor
                         MFAUser reg = RuntimeRepository.GetMFAUser(Provider.Config, usercontext.UPN);
                         result += "<br/>";
                         if (reg != null)
-                            result += "<input id=\"remember\" type=\"checkbox\" name=\"Remember\" " + ((reg.PreferredMethod == PreferredMethod.Code) ? "checked=\"checked\"> " : "> ") + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
+                            result += "<input id=\"##REMEMBER##\" type=\"checkbox\" name=\"##REMEMBER##\" " + ((reg.PreferredMethod == PreferredMethod.Code) ? "checked=\"checked\"> " : "> ") + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
                         else
-                            result += "<input id=\"remember\" type=\"checkbox\" name=\"Remember\" checked=\"checked\"> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
+                            result += "<input id=\"##REMEMBER##\" type=\"checkbox\" name=\"##REMEMBER##\" checked=\"checked\"> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
                     }
                     if (!string.IsNullOrEmpty(prov.GetAccountManagementUrl(usercontext)))
                     {
                         result += "<br/>";
-                        result += "<input type=\"checkbox\" id=\"manageaccount\" name=\"manageaccount\" /> " + prov.GetUIAccountManagementLabel(usercontext) + "<br/>";
+                        result += "<input type=\"checkbox\" id=\"##MANAGEACCOUNT##\" name=\"##MANAGEACCOUNT##\" /> " + prov.GetUIAccountManagementLabel(usercontext) + "<br/>";
                     }
                     result += "<br/>";
 
@@ -1725,7 +1728,7 @@ namespace Neos.IdentityServer.MultiFactor
                     break;
                 case 2: // Code verification
                     result += "<div id=\"wizardMessage\" class=\"groupMargin\">" + prov.GetUILabel(usercontext) + "</div>";
-                    result += "<input id=\"totp\" name=\"totp\" type=\"password\" placeholder=\"Verification Code\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
+                    result += "<input id=\"##ACCESSCODE##\" name=\"##ACCESSCODE##\" type=\"password\" placeholder=\"Verification Code\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
                     result += "<div class=\"fieldMargin smallText\">" + prov.GetUIMessage(usercontext) + "</div><br/>";
                     result += "<table><tr>";
                     result += "<td>";
@@ -1766,7 +1769,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"1\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"1\" />";
 
             result += "</form>";
             return result;
@@ -1789,9 +1792,9 @@ namespace Neos.IdentityServer.MultiFactor
             if (usercontext.WizPageID == 0)
             {
                 result += "   var mailformat = " + reg + " ;" + CR;
-                result += "   var email = document.getElementById('email');" + CR;
+                result += "   var email = document.getElementById('##EMAILADDRESS##');" + CR;
                 result += "   var err = document.getElementById('errorText');" + CR;
-                result += "   var canceled = document.getElementById('btnclicked');" + CR;
+                result += "   var canceled = document.getElementById('##SELECTED##');" + CR;
                 result += "   if ((canceled) && (canceled.value==1))" + CR;
                 result += "   {" + CR;
                 result += "      return true;" + CR;
@@ -1825,7 +1828,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnbtnclicked(id)";
             result += "{";
-            result += "var lnk = document.getElementById('btnclicked');";
+            result += "var lnk = document.getElementById('##SELECTED##');";
             result += "lnk.value = id;";
             result += "return true;";
             result += "}";
@@ -1865,7 +1868,7 @@ namespace Neos.IdentityServer.MultiFactor
                     result += "<div class=\"fieldMargin smallText\">" + prov.GetWizardUIComment(usercontext) + "</div><br/>";
                     if (prov.IsUIElementRequired(usercontext, RequiredMethodElements.EmailParameterRequired))
                     {                       
-                        result += "<input id=\"email\" name=\"email\" type=\"text\" placeholder=\"" + Utilities.StripEmailAddress(usercontext.MailAddress) + "\" class=\"text fullWidth\" /><br/>";
+                        result += "<input id=\"##EMAILADDRESS##\" name=\"##EMAILADDRESS##\" type=\"text\" placeholder=\"" + Utilities.StripEmailAddress(usercontext.MailAddress) + "\" class=\"text fullWidth\" /><br/>";
                     }
                     List<AvailableAuthenticationMethod> lst = prov.GetAuthenticationMethods(usercontext);
                     if (lst.Count > 1)
@@ -1874,7 +1877,7 @@ namespace Neos.IdentityServer.MultiFactor
                         if (prov.AllowOverride)
                         {
                             ov = prov.GetOverrideMethod(usercontext);
-                            result += "<input id=\"optiongroup\" name=\"optionitem\" type=\"radio\" value=\"Default\" checked=\"checked\" /> " + prov.GetUIDefaultChoiceLabel(usercontext) + "<br/>";
+                            result += "<input id=\"optiongroup\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"Default\" checked=\"checked\" /> " + prov.GetUIDefaultChoiceLabel(usercontext) + "<br/>";
                         }
                         int i = 1;
                         foreach (AvailableAuthenticationMethod met in lst)
@@ -1882,12 +1885,12 @@ namespace Neos.IdentityServer.MultiFactor
                             if (ov != AuthenticationResponseKind.Error)
                             {
                                 if (met.Method == ov)
-                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"optionitem\" type=\"radio\" value=\"" + met.Method.ToString() + "\" checked=\"checked\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
+                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"" + met.Method.ToString() + "\" checked=\"checked\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
                                 else
-                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"optionitem\" type=\"radio\" value=\"" + met.Method.ToString() + "\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
+                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"" + met.Method.ToString() + "\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
                             }
                             else
-                                result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"optionitem\" type=\"radio\" value=\"" + met.Method.ToString() + "\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
+                                result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"" + met.Method.ToString() + "\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
                             i++;
                         }
                     }
@@ -1896,14 +1899,14 @@ namespace Neos.IdentityServer.MultiFactor
                         MFAUser reg = RuntimeRepository.GetMFAUser(Provider.Config, usercontext.UPN);
                         result += "<br/>";
                         if (reg != null)
-                            result += "<input id=\"remember\" type=\"checkbox\" name=\"Remember\"" + (reg.PreferredMethod == PreferredMethod.Email ? " checked=\"checked\"" : "\"\"") + "\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
+                            result += "<input id=\"##REMEMBER##\" type=\"checkbox\" name=\"##REMEMBER##\"" + (reg.PreferredMethod == PreferredMethod.Email ? " checked=\"checked\"" : "\"\"") + "\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
                         else
-                            result += "<input id=\"remember\" type=\"checkbox\" name=\"Remember\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
+                            result += "<input id=\"##REMEMBER##\" type=\"checkbox\" name=\"##REMEMBER##\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
                     }
                     if (!string.IsNullOrEmpty(prov.GetAccountManagementUrl(usercontext)))
                     {
                         result += "<br/>";
-                        result += "<input type=\"checkbox\" id=\"manageaccount\" name=\"manageaccount\" /> " + prov.GetUIAccountManagementLabel(usercontext) + "<br/>";
+                        result += "<input type=\"checkbox\" id=\"##MANAGEACCOUNT##\" name=\"##MANAGEACCOUNT##\" /> " + prov.GetUIAccountManagementLabel(usercontext) + "<br/>";
                     }
                     result += "<br/>";
                     result += "<table><tr>";
@@ -1929,7 +1932,7 @@ namespace Neos.IdentityServer.MultiFactor
                     break;
                 case 2: // Code verification
                     result += "<div id=\"wizardMessage\" class=\"groupMargin\">" + prov.GetUILabel(usercontext) + "</div>";
-                    result += "<input id=\"totp\" name=\"totp\" type=\"password\" placeholder=\"Verification Code\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
+                    result += "<input id=\"##ACCESSCODE##\" name=\"##ACCESSCODE##\" type=\"password\" placeholder=\"Verification Code\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
                     result += "<div class=\"fieldMargin smallText\">" + prov.GetUIMessage(usercontext) + "</div><br/>";
                     result += "<table><tr>";
                     result += "<td>";
@@ -1970,7 +1973,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"1\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"1\" />";
 
             result += "</form>";
             return result;
@@ -1997,9 +2000,9 @@ namespace Neos.IdentityServer.MultiFactor
                 result += "   var phoneformat = " + pho + " ;" + CR;
                 result += "   var phoneformat10 = " + pho10 + " ;" + CR;
                 result += "   var phoneformatus = " + phous + " ;" + CR;
-                result += "   var phone = document.getElementById('phone');" + CR;
+                result += "   var phone = document.getElementById('##PHONENUMBER##');" + CR;
                 result += "   var err = document.getElementById('errorText');" + CR;
-                result += "   var canceled = document.getElementById('btnclicked');" + CR;
+                result += "   var canceled = document.getElementById('##SELECTED##');" + CR;
                 result += "   if ((canceled) && (canceled.value==1))" + CR;
                 result += "   {";
                 result += "      return true;" + CR;
@@ -2033,7 +2036,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnbtnclicked(id)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "   return true;" + CR;
             result += "}" + CR;
@@ -2073,11 +2076,11 @@ namespace Neos.IdentityServer.MultiFactor
                     result += "<div class=\"fieldMargin smallText\">" + prov.GetWizardUIComment(usercontext) + "</div><br/>";
                     if (prov.IsUIElementRequired(usercontext, RequiredMethodElements.PhoneParameterRequired))
                     {
-                        result += "<input id=\"phone\" name=\"phone\" type=\"text\" placeholder=\"" + Utilities.StripPhoneNumber(usercontext.PhoneNumber) + "\" class=\"text fullWidth\" /><br/>";
+                        result += "<input id=\"##PHONENUMBER##\" name=\"##PHONENUMBER##\" type=\"text\" placeholder=\"" + Utilities.StripPhoneNumber(usercontext.PhoneNumber) + "\" class=\"text fullWidth\" /><br/>";
                     }
                     else if (prov.IsUIElementRequired(usercontext, RequiredMethodElements.ExternalParameterRequired)) 
                     {
-                        result += "<input id=\"phone\" name=\"phone\" type=\"text\" class=\"text fullWidth\" /><br/>";
+                        result += "<input id=\"##PHONENUMBER##\" name=\"##PHONENUMBER##\" type=\"text\" class=\"text fullWidth\" /><br/>";
                     }
                     List<AvailableAuthenticationMethod> lst = prov.GetAuthenticationMethods(usercontext);
                     if (lst.Count > 1)
@@ -2086,7 +2089,7 @@ namespace Neos.IdentityServer.MultiFactor
                         if (prov.AllowOverride)
                         {
                             ov = prov.GetOverrideMethod(usercontext);
-                            result += "<input id=\"optiongroup\" name=\"optionitem\" type=\"radio\" value=\"Default\" checked=\"checked\" /> " + prov.GetUIDefaultChoiceLabel(usercontext) + "<br/>";
+                            result += "<input id=\"optiongroup\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"Default\" checked=\"checked\" /> " + prov.GetUIDefaultChoiceLabel(usercontext) + "<br/>";
                         }
                         int i = 1;
                         foreach (AvailableAuthenticationMethod met in lst)
@@ -2094,12 +2097,12 @@ namespace Neos.IdentityServer.MultiFactor
                             if (ov != AuthenticationResponseKind.Error)
                             {
                                 if (met.Method == ov)
-                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"optionitem\" type=\"radio\" value=\"" + met.Method.ToString() + "\" checked=\"checked\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
+                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"" + met.Method.ToString() + "\" checked=\"checked\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
                                 else
-                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"optionitem\" type=\"radio\" value=\"" + met.Method.ToString() + "\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
+                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"" + met.Method.ToString() + "\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
                             }
                             else
-                                result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"optionitem\" type=\"radio\" value=\"" + met.Method.ToString() + "\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
+                                result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"" + met.Method.ToString() + "\" /> " + prov.GetUIChoiceLabel(usercontext, met) + "<br/>";
                             i++;
                         }
                     }
@@ -2109,14 +2112,14 @@ namespace Neos.IdentityServer.MultiFactor
                         MFAUser reg = RuntimeRepository.GetMFAUser(Provider.Config, usercontext.UPN);
                         result += "<br/>";
                         if (reg != null)
-                            result += "<input id=\"remember\" type=\"checkbox\" name=\"Remember\"" + (reg.PreferredMethod == PreferredMethod.External ? " checked=\"checked\"" : "\"\"") + "\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
+                            result += "<input id=\"##REMEMBER##\" type=\"checkbox\" name=\"##REMEMBER##\"" + (reg.PreferredMethod == PreferredMethod.External ? " checked=\"checked\"" : "\"\"") + "\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
                         else
-                            result += "<input id=\"remember\" type=\"checkbox\" name=\"Remember\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
+                            result += "<input id=\"##REMEMBER##\" type=\"checkbox\" name=\"##REMEMBER##\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
                     }
                     if (!string.IsNullOrEmpty(prov.GetAccountManagementUrl(usercontext)))
                     {
                         result += "<br/>";
-                        result += "<input type=\"checkbox\" id=\"manageaccount\" name=\"manageaccount\" /> " + prov.GetUIAccountManagementLabel(usercontext) + "<br/>";
+                        result += "<input type=\"checkbox\" id=\"##MANAGEACCOUNT##\" name=\"##MANAGEACCOUNT##\" /> " + prov.GetUIAccountManagementLabel(usercontext) + "<br/>";
                     }
 
                     result += "<br/>";
@@ -2143,7 +2146,7 @@ namespace Neos.IdentityServer.MultiFactor
                     break;
                 case 2: // Code verification If One-Way
                     result += "<div id=\"wizardMessage\" class=\"groupMargin\">" + prov.GetUILabel(usercontext) + "</div>";
-                    result += "<input id=\"totp\" name=\"totp\" type=\"password\" placeholder=\"Verification Code\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
+                    result += "<input id=\"##ACCESSCODE##\" name=\"##ACCESSCODE##\" type=\"password\" placeholder=\"Verification Code\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
                     result += "<div class=\"fieldMargin smallText\">" + prov.GetUIMessage(usercontext) + "</div><br/>";
                     result += "<table><tr>";
                     result += "<td>";
@@ -2182,7 +2185,7 @@ namespace Neos.IdentityServer.MultiFactor
             }
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"1\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"1\" />";
 
             result += "</form>";
             return result;
@@ -2211,7 +2214,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnbtnclicked(id)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "   return true;" + CR;
             result += "}";
@@ -2219,7 +2222,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnlnkclicked(frm, id)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "   frm.submit();" + CR;
             result += "   return true;" + CR;
@@ -2237,7 +2240,7 @@ namespace Neos.IdentityServer.MultiFactor
             result += "   {" + CR;
             result += "      return false;" + CR;
             result += "   }";
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "   frm.submit();" + CR;
             result += "   return true;" + CR;
@@ -2263,7 +2266,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function SetJsError(message)" + CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = 5;" + CR;
             result += "   var err = document.getElementById('jserror');" + CR;
             result += "   err.value = message;" + CR;
@@ -2313,14 +2316,14 @@ namespace Neos.IdentityServer.MultiFactor
                     if (prov.IsUIElementRequired(usercontext, RequiredMethodElements.BiometricParameterRequired))
                     {
                         List<WebAuthNCredentialInformation> creds = web.GetUserStoredCredentials(usercontext);
-                        result += "<input id=\"optiongroup0\" name=\"optionitem\" type=\"radio\" value=\"" + Guid.Empty.ToString() + "\" checked=\"checked\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlLabelWRAddBiometrics") + "<br/>";
+                        result += "<input id=\"optiongroup0\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"" + Guid.Empty.ToString() + "\" checked=\"checked\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlLabelWRAddBiometrics") + "<br/>";
                         int i = 1;
                         if (creds.Count > 0)
                         {
                             foreach (WebAuthNCredentialInformation cr in creds)
                             {
                                 if (i <= 2)
-                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"optionitem\" type=\"radio\" value=\"" + cr.CredentialID + "\" /> <b>" + cr.CredType + "</b> " + cr.RegDate.ToString() + " <b>(" + cr.SignatureCounter.ToString() + ")</b><br/>";
+                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"" + cr.CredentialID + "\" /> <b>" + cr.CredType + "</b> " + cr.RegDate.ToString() + " <b>(" + cr.SignatureCounter.ToString() + ")</b><br/>";
                                 if (i==3)
                                     result += "<p style = \"text-indent:20px;\" >More...</p>";
                                 i++;
@@ -2337,14 +2340,14 @@ namespace Neos.IdentityServer.MultiFactor
                         MFAUser reg = RuntimeRepository.GetMFAUser(Provider.Config, usercontext.UPN);
                         result += "<br/>";
                         if (reg != null)
-                            result += "<input id=\"remember\" type=\"checkbox\" name=\"Remember\"" + (reg.PreferredMethod == PreferredMethod.Biometrics ? " checked=\"checked\"" : "\"\"") + "\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
+                            result += "<input id=\"##REMEMBER##\" type=\"checkbox\" name=\"##REMEMBER##\"" + (reg.PreferredMethod == PreferredMethod.Biometrics ? " checked=\"checked\"" : "\"\"") + "\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
                         else
-                            result += "<input id=\"remember\" type=\"checkbox\" name=\"Remember\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
+                            result += "<input id=\"##REMEMBER##\" type=\"checkbox\" name=\"##REMEMBER##\" > " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlCHOOSEOptionRemember2") + "<br/>";
                     }
                     if (!string.IsNullOrEmpty(prov.GetAccountManagementUrl(usercontext)))
                     {
                         result += "<br/>";
-                        result += "<input type=\"checkbox\" id=\"manageaccount\" name=\"manageaccount\" /> " + prov.GetUIAccountManagementLabel(usercontext) + "<br/>";
+                        result += "<input type=\"checkbox\" id=\"##MANAGEACCOUNT##\" name=\"##MANAGEACCOUNT##\" /> " + prov.GetUIAccountManagementLabel(usercontext) + "<br/>";
                     }
 
                     result += "<br/>";
@@ -2379,7 +2382,7 @@ namespace Neos.IdentityServer.MultiFactor
                     break;
                 case 2: // Code verification If One-Way
                     result += "<div id=\"wizardMessage\" class=\"groupMargin\">" + prov.GetUILabel(usercontext) + "</div>";
-                    result += "<input id=\"totp\" name=\"totp\" type=\"password\" placeholder=\"Verification Code\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
+                    result += "<input id=\"##ACCESSCODE##\" name=\"##ACCESSCODE##\" type=\"password\" placeholder=\"Verification Code\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
                     result += "<div class=\"fieldMargin smallText\">" + prov.GetUIMessage(usercontext) + "</div><br/>";
                     result += "<table><tr>";
                     result += "<td>";
@@ -2421,14 +2424,14 @@ namespace Neos.IdentityServer.MultiFactor
                         List<WebAuthNCredentialInformation> creds = web.GetUserStoredCredentials(usercontext);
                         result += "<div class=\"fieldMargin smallText\">" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlLabelWRManageBiometrics") + "</div><br/>";
                         if (creds.Count < 10)
-                            result += "<input id=\"optiongroup0\" name=\"optionitem\" type=\"radio\" value=\"" + Guid.Empty.ToString() + "\" checked=\"checked\" onchange=\"SetLinkState(false, '" + Guid.Empty.ToString() + "')\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlLabelWRAddBiometrics") + "<br/>";
+                            result += "<input id=\"optiongroup0\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"" + Guid.Empty.ToString() + "\" checked=\"checked\" onchange=\"SetLinkState(false, '" + Guid.Empty.ToString() + "')\" /> " + Resources.GetString(ResourcesLocaleKind.Html, "HtmlLabelWRAddBiometrics") + "<br/>";
                         int i = 1;
                         if (creds.Count > 0)
                         {
                             foreach (WebAuthNCredentialInformation cr in creds)
                             {
                                 if (i <= 10)
-                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"optionitem\" type=\"radio\" value=\"" + cr.CredentialID + "\" onchange=\"SetLinkState(true, '" + cr.CredentialID + "')\" /> <b>" + cr.CredType + "</b> " + cr.RegDate.ToString() + " <b>(" + cr.SignatureCounter.ToString() + ")</b><br/>";
+                                    result += "<input id=\"optiongroup" + i.ToString() + "\" name=\"##OPTIONITEM##\" type=\"radio\" value=\"" + cr.CredentialID + "\" onchange=\"SetLinkState(true, '" + cr.CredentialID + "')\" /> <b>" + cr.CredType + "</b> " + cr.RegDate.ToString() + " <b>(" + cr.SignatureCounter.ToString() + ")</b><br/>";
                                 i++;
                             }
                             result += "<a class=\"actionLink\" href=\"#\" id=\"delbio\" name=\"delbio\"  onclick=\"fn2lnkclicked(enrollbiometricsForm, 8)\" style=\"cursor: default; color:grey;\"> " + web.GetDeleteLinkLabel(usercontext) + "</a>";
@@ -2449,7 +2452,7 @@ namespace Neos.IdentityServer.MultiFactor
             }
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"1\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"btnclicked\" value=\"1\" />";
             result += "<input id=\"jserror\" type=\"hidden\" name=\"jserror\" value=\"\" />";
             if (usercontext.WizPageID == 1)
             {
@@ -2478,8 +2481,13 @@ namespace Neos.IdentityServer.MultiFactor
             if (usercontext.WizPageID == 0)
             {
                 result += "   var pinformat = " + reg + " ;" + CR;
-                result += "   var pincode = document.getElementById('pincode');" + CR;
+                result += "   var pincode = document.getElementById('##PINCODE##');" + CR;
                 result += "   var err = document.getElementById('errorText');" + CR;
+                result += "   var canceled = document.getElementById('##SELECTED##');" + CR;
+                result += "   if ((canceled) && (canceled.value==1))" + CR;
+                result += "   {" + CR;
+                result += "      return true;" + CR;
+                result += "   }" + CR;
                 result += "   if ((pincode) && (pincode.value=='') && (pincode.placeholder==''))" + CR;
                 result += "   {" + CR;
                 result += "      err.innerHTML = \"" + Resources.GetString(ResourcesLocaleKind.Validation, "ValidIncorrectPinCode") + "\";" + CR;
@@ -2501,7 +2509,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "function fnbtnclicked(id)" +CR;
             result += "{" + CR;
-            result += "   var lnk = document.getElementById('btnclicked');" + CR;
+            result += "   var lnk = document.getElementById('##SELECTED##');" + CR;
             result += "   lnk.value = id;" + CR;
             result += "   return true;" + CR;
             result += "}" + CR;
@@ -2523,9 +2531,9 @@ namespace Neos.IdentityServer.MultiFactor
                     result += "<div id=\"wizardMessage\" class=\"groupMargin\">" + BaseExternalProvider.GetPINWizardUILabel(usercontext) + "</div>";
                     result += "<div class=\"fieldMargin smallText\">" + string.Format(Resources.GetString(ResourcesLocaleKind.Html, "HtmlLabelWRPinCode"), Provider.Config.PinLength.ToString()) + "</div><br/>";
                     if (usercontext.PinCode <= 0)
-                        result += "<input id=\"pincode\" name=\"pincode\" type=\"text\" placeholder=\"" + Utilities.StripPinCode(Provider.Config.DefaultPin) + "\" class=\"text fullWidth\" /><br/>";
+                        result += "<input id=\"##PINCODE##\" name=\"##PINCODE##\" type=\"text\" placeholder=\"" + Utilities.StripPinCode(Provider.Config.DefaultPin) + "\" class=\"text fullWidth\" /><br/>";
                     else
-                        result += "<input id=\"pincode\" name=\"pincode\" type=\"text\" placeholder=\"" + Utilities.StripPinCode(usercontext.PinCode) + "\" class=\"text fullWidth\" /><br/>";
+                        result += "<input id=\"##PINCODE##\" name=\"##PINCODE##\" type=\"text\" placeholder=\"" + Utilities.StripPinCode(usercontext.PinCode) + "\" class=\"text fullWidth\" /><br/>";
                     result += "<br/>";
                     result += "<table><tr>";
                     result += "<td>";
@@ -2541,7 +2549,7 @@ namespace Neos.IdentityServer.MultiFactor
                     break;
                 case 2: // Code verification
                     result += "<div id=\"wizardMessage\" class=\"groupMargin\">" + BaseExternalProvider.GetPINLabel(usercontext) + "</div>";
-                    result += "<input id=\"pincode\" name=\"pincode\" type=\"password\" placeholder=\"PIN\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
+                    result += "<input id=\"##PINCODE##\" name=\"##PINCODE##\" type=\"password\" placeholder=\"PIN\" class=\"text fullWidth\" autofocus=\"autofocus\" /><br/>";
                     result += "<div class=\"fieldMargin smallText\">" + BaseExternalProvider.GetPINMessage(usercontext) + "</div><br/>";
                     result += "<table><tr>";
                     result += "<td>";
@@ -2581,7 +2589,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             result += "<input id=\"context\" type=\"hidden\" name=\"Context\" value=\"%Context%\"/>";
             result += "<input id=\"authMethod\" type=\"hidden\" name=\"AuthMethod\" value=\"%AuthMethod%\"/>";
-            result += "<input id=\"btnclicked\" type=\"hidden\" name=\"btnclicked\" value=\"1\" />";
+            result += "<input id=\"##SELECTED##\" type=\"hidden\" name=\"##SELECTED##\" value=\"1\" />";
 
             result += "</form>";
             return result;
@@ -2602,7 +2610,7 @@ namespace Neos.IdentityServer.MultiFactor
                 method = reg.PreferredMethod;
             string result = string.Empty;
             result += "<b><div class=\"fieldMargin\">" + Resources.GetString(ResourcesLocaleKind.Html, "HtmlREGAccessMethod") + "</div></b>";
-            result += "<select id=\"selectopt\" name=\"selectopt\" role=\"combobox\"  required=\"required\" contenteditable=\"false\" class=\"text fullWidth\" >";
+            result += "<select id=\"##SELECTOPTIONS##\" name=\"##SELECTOPTIONS##\" role=\"combobox\"  required=\"required\" contenteditable=\"false\" class=\"text fullWidth\" >";
 
             result += "<option value=\"0\" " + ((method == PreferredMethod.Choose) ? "selected=\"true\"> " : "> ") + Resources.GetString(ResourcesLocaleKind.Html, "HtmlREGOptionChooseBest") + "</option>";
 
@@ -2611,7 +2619,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             if (RuntimeAuthProvider.IsProviderAvailableForUser(usercontext, PreferredMethod.Biometrics))
                 result += "<option value=\"5\" " + ((method == PreferredMethod.Biometrics) ? "selected=\"true\">" : ">") + RuntimeAuthProvider.GetProvider(PreferredMethod.Biometrics).GetUIListChoiceLabel(usercontext) + "</option>";
-            if (!Provider.Config.IsPrimaryAuhentication)
+            if ((!Provider.Config.IsPrimaryAuhentication) || (Provider.Config.PrimaryAuhenticationOptions.HasFlag(PrimaryAuthOptions.Externals)))
             {
                 if (RuntimeAuthProvider.IsProviderAvailableForUser(usercontext, PreferredMethod.Email))
                     result += "<option value=\"2\" " + ((method == PreferredMethod.Email) ? "selected=\"true\"> " : "> ") + RuntimeAuthProvider.GetProvider(PreferredMethod.Email).GetUIListChoiceLabel(usercontext) + "</option>";
@@ -2625,235 +2633,6 @@ namespace Neos.IdentityServer.MultiFactor
             result += "</select><br/>";
             return result;
         }
-
-        /// <summary>
-        /// GetWebAuthNSharedScript method implementation
-        /// </summary>
-        private string GetWebAuthNSharedScript(AuthenticationContext usercontext)
-        {
-            string result = string.Empty;
-            result += "function coerceToArrayBuffer(thing, name)" + CR;
-            result += "{" + CR;
-            result += "    if (typeof thing === \"string\")" + CR;
-            result += "    {" + CR;
-            result += "       thing = thing.replace(/-/g, \"+\").replace(/_/g, \"/\");" + CR;
-            result += "       var str = window.atob(thing);" + CR;
-            result += "       var bytes = new Uint8Array(str.length);" + CR;
-            result += "       for (var i = 0; i < str.length; i++)" + CR;
-            result += "       {" + CR;
-            result += "          bytes[i] = str.charCodeAt(i);" + CR;
-            result += "       }" + CR;
-            result += "       thing = bytes;" + CR;
-            result += "    }" + CR;
-            result += "    if (Array.isArray(thing))" + CR;
-            result += "    {" + CR;
-            result += "       thing = new Uint8Array(thing);" + CR;
-            result += "    }" + CR;
-            result += "    if (thing instanceof Uint8Array)" + CR;
-            result += "    {" + CR;
-            result += "       thing = thing.buffer;" + CR;
-            result += "    }" + CR;
-            result += "    if (!(thing instanceof ArrayBuffer))" + CR;
-            result += "    {" + CR;
-            result += "       throw new TypeError(\"could not coerce '\" + name + \"' to ArrayBuffer\");" + CR;
-            result += "    }" + CR;
-            result += "    return thing;" + CR;
-            result += "}" + CR;
-            result += CR;
-
-            result += "function coerceToBase64Url(thing)" + CR;
-            result += "{" + CR;
-            result += "    if (Array.isArray(thing))" + CR;
-            result += "    {" + CR;
-            result += "       thing = Uint8Array.from(thing);" + CR;
-            result += "    }" + CR;
-            result += "    if (thing instanceof ArrayBuffer)" + CR;
-            result += "    {" + CR;
-            result += "       thing = new Uint8Array(thing);" + CR;
-            result += "    }" + CR;
-            result += "    if (thing instanceof Uint8Array)" + CR;
-            result += "    {" + CR;
-            result += "       var str = \"\";" + CR;
-            result += "       var len = thing.byteLength;" + CR;
-            result += "       for (var i = 0; i < len; i++)" + CR;
-            result += "       {" + CR;
-            result += "          str += String.fromCharCode(thing[i]);" + CR;
-            result += "       }" + CR;
-            result += "       thing = window.btoa(str);" + CR;
-            result += "    }" + CR;
-            result += "    if (typeof thing !== \"string\")" + CR;
-            result += "    {" + CR;
-            result += "        throw new Error(\"could not coerce to string\");" + CR;
-            result += "    }" + CR;
-            result += "    thing = thing.replace(/\\+/g, \"-\").replace(/\\//g, \"_\").replace(/=*$/g, \"\");" + CR;
-            result += "    return thing;" + CR;
-            result += "}" + CR;
-            result += CR;
-
-            return result;
-        }
-
-        /// <summary>
-        /// GetWebAuthNAttestationScript method implementation
-        /// </summary>
-        private string GetWebAuthNAttestationScript(AuthenticationContext usercontext)
-        {
-            string result = GetWebAuthNSharedScript(usercontext);
-            result += "async function RegisterWebAuthN(frm)" + CR;
-            result += "{" + CR;
-            result += "   frm.preventDefault();" + CR;
-            result += "   if (detectWebAuthNSupport() === true)" + CR;
-            result += "   {" + CR;
-            result += "      let makeCredentialOptions;" + CR;
-            result += "      try" + CR;
-            result += "      {" + CR;
-            result += "         makeCredentialOptions = " + usercontext.CredentialOptions + ";" + CR;
-            result += "         makeCredentialOptions.challenge = coerceToArrayBuffer(makeCredentialOptions.challenge);" + CR;
-            result += "         makeCredentialOptions.user.id = coerceToArrayBuffer(makeCredentialOptions.user.id);" + CR;
-            result += "         makeCredentialOptions.excludeCredentials = makeCredentialOptions.excludeCredentials.map((c) => {c.id = coerceToArrayBuffer(c.id); return c;});" + CR;
-            result += "        if (makeCredentialOptions.authenticatorSelection.authenticatorAttachment === null)" + CR;
-            result += "           makeCredentialOptions.authenticatorSelection.authenticatorAttachment = undefined;" + CR;
-            result += "      }" + CR;
-            result += "      catch (e)" + CR;
-            result += "      {" + CR;
-            result += "         SetJsError(e.message);" + CR;
-            result += "         return false;" + CR;
-            result += "      }" + CR;
-            result += "      if (makeCredentialOptions.status !== \"ok\")" + CR;
-            result += "      {" + CR;
-            result += "         SetJsError(makeCredentialOptions.errorMessage);" + CR;
-            result += "         return false;" + CR;
-            result += "      }" + CR;
-            result += "      let newCredential;" + CR;
-            result += "      try" + CR;
-            result += "      {" + CR;
-            result += "         newCredential = await navigator.credentials.create({publicKey: makeCredentialOptions});" + CR;
-            result += "         RegisterNewCredentials(newCredential);" + CR;
-            result += "      }" + CR;
-            result += "      catch (e)" + CR;
-            result += "      {" + CR;
-            result += "         SetJsError(e.message);" + CR;
-            result += "         return false;" + CR;
-            result += "      }" + CR;
-            result += "      return true;" + CR;
-            result += "   }" + CR;
-            result += "   else" + CR;
-            result += "   {" + CR;
-            result += "      SetJsError(\"Biometric authentication not supported\");" + CR;
-            result += "      return false;" + CR;
-            result += "   }" + CR;
-            result += "}" + CR;
-            result += CR;
-
-            result += "async function RegisterNewCredentials(newCredential)" + CR;
-            result += "{" + CR;
-            result += "   try" + CR;
-            result += "   {" + CR;
-            result += "      let attestationObject = new Uint8Array(newCredential.response.attestationObject);" + CR;
-            result += "      let clientDataJSON = new Uint8Array(newCredential.response.clientDataJSON);" + CR;
-            result += "      let rawId = new Uint8Array(newCredential.rawId);" + CR;
-            result += "      const data = {id: newCredential.id, rawId: coerceToBase64Url(rawId), type: newCredential.type, " + CR;
-            result += "         extensions: newCredential.getClientExtensionResults()," + CR;
-            result += "         response: { AttestationObject: coerceToBase64Url(attestationObject), clientDataJson: coerceToBase64Url(clientDataJSON) }" + CR;
-            result += "      };" + CR;
-            result += "      OnRefreshPost(3, data);" + CR;
-            result += "   }" + CR;
-            result += "   catch (e)" + CR;
-            result += "   {" + CR;
-            result += "      SetJsError(e.message);" + CR;
-            result += "      return false;" + CR;
-            result += "   }" + CR;
-            result += "   return true;" + CR;
-            result += "}" + CR;
-            result += CR;
-
-            return result;
-        }
-
-        /// <summary>
-        /// GetWebAuthNAssertionScript method implementation
-        /// </summary>
-        private string GetWebAuthNAssertionScript(AuthenticationContext usercontext)
-        {
-            string result = GetWebAuthNSharedScript(usercontext);
-            result += "async function LoginWebAuthN(frm)" + CR;
-            result += "{" + CR;
-            result += "   frm.preventDefault();" + CR;
-            result += "   if (detectWebAuthNSupport() === true)" + CR;
-            result += "   {" + CR;
-            result += "      let makeAssertionOptions;" + CR; 
-            result += "      try" + CR; 
-            result += "      {"+ CR;
-            result += "         makeAssertionOptions = " + usercontext.AssertionOptions + ";" + CR;
-            result += "         const challenge = makeAssertionOptions.challenge.replace(/-/g, \"+\").replace(/_/g, \"/\");" + CR;
-            result += "         makeAssertionOptions.challenge = Uint8Array.from(atob(challenge), c => c.charCodeAt(0));" + CR;
-            result += "         makeAssertionOptions.allowCredentials.forEach(function (listItem)" + CR;
-            result += "         {" + CR;
-            result += "            var fixedId = listItem.id.replace(/_/g, \"/\").replace(/-/g, \"+\");" + CR;
-            result += "            listItem.id = Uint8Array.from(atob(fixedId), c => c.charCodeAt(0));" + CR;
-            result += "         });" + CR;
-            result += "      }" + CR;
-            result += "      catch (e)" + CR;
-            result += "      {" + CR;
-            result += "         SetJsError(e.message);" + CR;
-            result += "         return false;" + CR;
-            result += "      }" + CR;
-            result += "      if (makeAssertionOptions.status !== \"ok\")" + CR;
-            result += "      {" + CR;
-            result += "         SetJsError(makeAssertionOptions.errorMessage);" + CR;
-            result += "         return false;" + CR;
-            result += "      }" + CR;
-            result += "      let credential;" + CR;
-            result += "      try" + CR;
-            result += "      {" + CR;
-            result += "         credential = await navigator.credentials.get({ publicKey: makeAssertionOptions });" + CR;
-            result += "         LoginAssertionCredentials(credential);" + CR;
-            result += "      }" + CR;
-            result += "      catch (e)" + CR;
-            result += "      {" + CR;
-            result += "         SetJsError(e.message);" + CR;
-            result += "         return false;" + CR;
-            result += "      }" + CR;
-            result += "      return true;" + CR;
-            result += "   }" + CR;
-            result += "   else" + CR;
-            result += "   {" + CR;
-            result += "      SetJsError(\"Biometric authentication not supported\");" + CR;
-            result += "      return false;" + CR;
-            result += "   }" + CR;
-            result += "}" + CR;
-            result += CR;
-            result += "async function LoginAssertionCredentials(assertedCredential)" + CR;
-            result += "{" + CR;
-            result += "   try" + CR;
-            result += "   {" + CR;
-            result += "      let authData = new Uint8Array(assertedCredential.response.authenticatorData);" + CR;
-            result += "      let clientDataJSON = new Uint8Array(assertedCredential.response.clientDataJSON);" + CR;
-            result += "      let rawId = new Uint8Array(assertedCredential.rawId);" + CR;
-            result += "      let sig = new Uint8Array(assertedCredential.response.signature);"+ CR;
-            result += "      const data = " + CR;
-            result += "      {" + CR;
-            result += "         id: assertedCredential.id," + CR;
-            result += "         rawId: coerceToBase64Url(rawId)," + CR;
-            result += "         type: assertedCredential.type," + CR;
-            result += "         extensions: assertedCredential.getClientExtensionResults()," + CR;
-            result += "         response: { authenticatorData: coerceToBase64Url(authData)," + CR;
-            result += "         clientDataJson: coerceToBase64Url(clientDataJSON)," + CR;
-            result += "         signature: coerceToBase64Url(sig) }" + CR;
-            result += "      };" + CR;
-            result += "      OnRefreshPost(data);" + CR;
-            result += "   }" + CR;
-            result += "   catch (e)" + CR;
-            result += "   {" + CR;
-            result += "      SetJsError(e.message);" + CR;
-            result += "      return false;" + CR;
-            result += "   }" + CR;
-            result += "   return true;" + CR;
-            result += "}" + CR;
-            result += CR;
-
-            return result;
-        }
-#endregion
+        #endregion
     }
 }

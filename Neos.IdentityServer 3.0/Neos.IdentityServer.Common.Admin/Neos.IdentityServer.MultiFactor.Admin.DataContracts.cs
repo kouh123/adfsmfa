@@ -74,6 +74,7 @@ namespace Neos.IdentityServer.MultiFactor.Administration
         public FlatAdvertising AdvertisingDays { get; set; }
         public ADFSUserInterfaceKind UiKind { get; set; }
         public bool UseUIPaginated { get; set; }
+        public PrimaryAuthOptions PrimaryAuhenticationOptions { get; set; }
         public string ForcedLanguage { get; set; }
 
         /// <summary>
@@ -96,6 +97,7 @@ namespace Neos.IdentityServer.MultiFactor.Administration
             AdvertisingDays = (FlatAdvertising)cfg.AdvertisingDays;
             UseUIPaginated = cfg.UseUIPaginated;
             UiKind = cfg.UiKind;
+            PrimaryAuhenticationOptions = cfg.PrimaryAuhenticationOptions;
             ForcedLanguage = cfg.ForcedLanguage;
         }
 
@@ -119,6 +121,7 @@ namespace Neos.IdentityServer.MultiFactor.Administration
             cfg.AdvertisingDays = (ConfigAdvertising)AdvertisingDays;
             cfg.UseUIPaginated = UseUIPaginated;
             cfg.UiKind = cfg.UiKind;
+            cfg.PrimaryAuhenticationOptions = PrimaryAuhenticationOptions;
             cfg.ForcedLanguage = ForcedLanguage;
             ManagementService.ADFSManager.WriteConfiguration(host);
         }
@@ -180,11 +183,12 @@ namespace Neos.IdentityServer.MultiFactor.Administration
         /// <summary>
         /// SetPrimaryAuthenticationStatus method implementation
         /// </summary>
-        internal void SetPrimaryAuthenticationStatus(PSHost host, bool enabled)
+        internal void SetPrimaryAuthenticationStatus(PSHost host, bool enabled, PrimaryAuthOptions options)
         {
             ManagementService.Initialize(true);
             MFAConfig cfg = ManagementService.Config;
             cfg.IsPrimaryAuhentication = enabled;
+            cfg.PrimaryAuhenticationOptions = options;
             ManagementService.ADFSManager.WriteConfiguration(host);
         }
     }
@@ -641,6 +645,9 @@ namespace Neos.IdentityServer.MultiFactor.Administration
         public bool Location { get; set; }
         public bool UserVerificationMethod { get; set; }
         public bool RequireResidentKey { get; set; }
+        public bool? HmacSecret { get; set; }
+        public WebAuthNUserVerification? CredProtect { get; set; }
+        public bool? EnforceCredProtect { get; set; }
 
         /// <summary>
         /// Update method implmentation
@@ -658,7 +665,10 @@ namespace Neos.IdentityServer.MultiFactor.Administration
             this.UserVerificationIndex = otp.Options.UserVerificationIndex;
             this.Location = otp.Options.Location;
             this.UserVerificationMethod = otp.Options.UserVerificationMethod;
-            this.RequireResidentKey = otp.Options.RequireResidentKey; 
+            this.RequireResidentKey = otp.Options.RequireResidentKey;
+            this.HmacSecret = otp.Options.HmacSecret;
+            this.CredProtect = otp.Options.CredProtect;
+            this.EnforceCredProtect = otp.Options.EnforceCredProtect;
         }
 
         /// <summary>
@@ -678,6 +688,10 @@ namespace Neos.IdentityServer.MultiFactor.Administration
             otp.Options.Location = this.Location;
             otp.Options.UserVerificationMethod = this.UserVerificationMethod;
             otp.Options.RequireResidentKey = this.RequireResidentKey;
+            otp.Options.HmacSecret = this.HmacSecret;
+            otp.Options.CredProtect = this.CredProtect;
+            otp.Options.EnforceCredProtect = this.EnforceCredProtect;
+
             ManagementService.ADFSManager.WriteConfiguration(host);
         }
     }
@@ -776,6 +790,8 @@ namespace Neos.IdentityServer.MultiFactor.Administration
     {
         public HashMode Algorithm { get; set; }
         public int TOTPShadows { get; set; }
+        public int Digits { get; set; }
+        public int Duration { get; set; }
         public OTPWizardOptions WizardOptions { get; set; }
         public KeySizeMode KeySize { get; set; }
         public SecretKeyFormat KeysFormat { get; set; }
@@ -805,6 +821,8 @@ namespace Neos.IdentityServer.MultiFactor.Administration
             this.EnrollWizard = otp.EnrollWizard;
             this.ForceWizard = otp.ForceWizard;
             this.Algorithm = otp.Algorithm;
+            this.Digits = otp.TOTPDigits;
+            this.Duration = otp.TOTPDuration;
             this.TOTPShadows = otp.TOTPShadows;
             this.WizardOptions = otp.WizardOptions;
             this.KeySize = cfg.KeysConfig.KeySize;
@@ -830,6 +848,8 @@ namespace Neos.IdentityServer.MultiFactor.Administration
             otp.ForceWizard = this.ForceWizard;
             otp.Algorithm = this.Algorithm;
             otp.TOTPShadows = this.TOTPShadows;
+            otp.TOTPDigits = this.Digits;
+            otp.TOTPDuration = this.Duration;
             otp.WizardOptions = this.WizardOptions;
             cfg.KeysConfig.KeySize = this.KeySize;
             cfg.KeysConfig.KeyFormat = this.KeysFormat;

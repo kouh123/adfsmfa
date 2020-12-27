@@ -145,7 +145,7 @@
     <value>Użyj mojego urządzenia biometrycznego</value>
   </data>
   <data name="BIOUIEnrollTaskLabel" xml:space="preserve">
-    <value>Rejestrowanie urządzenia biometrycznego</value>
+    <value>Rejestracja urządzenia biometrycznego</value>
   </data>
   <data name="BIOUIEnrollValidatedLabel" xml:space="preserve">
     <value>Konto zweryfikowane &lt;br&gt; &lt;br&gt; można użyć urządzenia biometrycznego do uwierzytelnienia</value>
@@ -161,5 +161,8 @@
   </data>
   <data name="BIOUIWIZComment" xml:space="preserve">
     <value>Zarządzaj urządzeniami biometrycznymi. Wybierz dodaj, zamień lub usuń poszczególne urządzenia.</value>
+  </data>
+  <data name="BIOERRORAUTHREPLAY" xml:space="preserve">
+    <value>Błąd podczas procesu uwierzytelniania! Koder bezpieczeństwa Dane zostały wykorzystane wcześniej!</value>
   </data>
 </root>

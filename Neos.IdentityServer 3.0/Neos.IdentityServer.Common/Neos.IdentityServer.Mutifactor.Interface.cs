@@ -1,5 +1,4 @@
-﻿using Neos.IdentityServer.MultiFactor.Data;
-//******************************************************************************************************************************************************************************************//
+﻿//******************************************************************************************************************************************************************************************//
 // Copyright (c) 2020 @redhook62 (adfsmfa@gmail.com)                                                                                                                                    //                        
 //                                                                                                                                                                                          //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),                                       //
@@ -17,7 +16,6 @@
 //                                                                                                                                                                                          //
 //******************************************************************************************************************************************************************************************//
 using System.Globalization;
-using Microsoft.IdentityServer.Web.Authentication.External;
 using System.Collections.Generic;
 using Neos.IdentityServer.MultiFactor.Common;
 
@@ -81,6 +79,7 @@ namespace Neos.IdentityServer.MultiFactor
         void Initialize(BaseProviderParams externalsystem);
         int PostAuthenticationRequest(AuthenticationContext ctx);
         int SetAuthenticationResult(AuthenticationContext ctx, string result);
+        int SetAuthenticationResult(AuthenticationContext ctx, string result, out string error);
         void GetAuthenticationContext(AuthenticationContext ctx);
         AvailableAuthenticationMethod GetSelectedAuthenticationMethod(AuthenticationContext ctx);
         bool SetSelectedAuthenticationMethod(AuthenticationContext ctx, AuthenticationResponseKind method, bool updateoverride = false);

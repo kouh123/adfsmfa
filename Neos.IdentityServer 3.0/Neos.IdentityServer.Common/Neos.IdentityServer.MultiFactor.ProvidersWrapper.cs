@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -97,6 +98,21 @@ namespace Neos.IdentityServer.MultiFactor.Common
         public abstract void Initialize(BaseProviderParams externalsystem);
         public abstract int PostAuthenticationRequest(AuthenticationContext ctx);
         public abstract int SetAuthenticationResult(AuthenticationContext ctx, string result);
+
+        public virtual int SetAuthenticationResult(AuthenticationContext ctx, string result, out string error)
+        {
+            try
+            {
+                error = string.Empty;
+                return SetAuthenticationResult(ctx, result);
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return (int)AuthenticationResponseKind.Error;
+            }
+        }
+
         public abstract List<AvailableAuthenticationMethod> GetAuthenticationMethods(AuthenticationContext ctx);
         public virtual string GetAuthenticationData(AuthenticationContext ctx) { return string.Empty; }
         public virtual void ReleaseAuthenticationData(AuthenticationContext ctx) { }
@@ -478,6 +494,8 @@ namespace Neos.IdentityServer.MultiFactor.Common
     public class NeosOTPProvider : BaseExternalProvider, ITOTPProviderParameters
     {
         private int TOTPShadows = 2;  // 2,147,483,647
+        private int _digits = 6;
+        private int _duration = 30;
         private HashMode Algorithm = HashMode.SHA1;
         private bool _isinitialized = false;
         private bool _isrequired = true;
@@ -488,7 +506,15 @@ namespace Neos.IdentityServer.MultiFactor.Common
         /// </summary>
         public int Duration
         {
-            get { return 30; }
+            get { return _duration; }
+            set
+            {
+                int xvalue = ((value / 30) * 30);
+                if ((xvalue < 30) || (xvalue > 180))
+                    throw new InvalidDataException("Duration must be at least between 30 seconds and 3 minutes");
+                else
+                    _duration = xvalue;
+            }
         }
 
         /// <summary>
@@ -496,8 +522,19 @@ namespace Neos.IdentityServer.MultiFactor.Common
         /// </summary>
         public int Digits
         {
-            get { return 6; }
+            get { return _digits; }
+            set
+            {
+                if ((value < 4) || (value > 8))
+                    throw new InvalidDataException("Digits must be between 4 and 8 digits");
+                _digits = value;
+            }
         }
+
+        /// <summary>
+        /// ReplayLevel property
+        /// </summary>
+        public MFAConfig Config { get; private set; }
 
         /// <summary>
         /// Kind property implementation
@@ -793,6 +830,7 @@ namespace Neos.IdentityServer.MultiFactor.Common
                     if (externalsystem is OTPProviderParams)
                     {
                         OTPProviderParams param = externalsystem as OTPProviderParams;
+                        Config = param.Config;
                         TOTPShadows = param.TOTPShadows;
                         Algorithm = param.Algorithm;
 
@@ -801,6 +839,8 @@ namespace Neos.IdentityServer.MultiFactor.Common
                         WizardEnabled = param.EnrollWizard;
                         ForceEnrollment = param.ForceWizard;
                         PinRequired = param.PinRequired;
+                        Duration = param.Duration;
+                        Digits = param.Digits;
                         _isinitialized = true;
                         return;
                     }
@@ -870,6 +910,15 @@ namespace Neos.IdentityServer.MultiFactor.Common
             if (!IsInitialized)
                 throw new Exception("Provider not initialized !");
             int value = Convert.ToInt32(pin);
+            if (Config != null)
+            {
+                if (!Utilities.CheckForReplay(Config, ctx, Convert.ToInt32(pin)))
+                {
+                    ResourcesLocale Resources = new ResourcesLocale(ctx.Lcid);
+                    string error = Resources.GetString(ResourcesLocaleKind.Errors, "ErrorReplayToken");
+                    throw new Exception(error);
+                }
+            }
             if (CheckPin(ctx, value))
                 return (int)AuthenticationResponseKind.PhoneAppOTP;
             else
@@ -891,9 +940,9 @@ namespace Neos.IdentityServer.MultiFactor.Common
                             throw new CryptographicException(string.Format("SECURTY ERROR : Invalid Key for User {0}", usercontext.UPN));
                         byte[] encodedkey = KeysManager.ProbeKey(usercontext.UPN);
                         DateTime call = DateTime.UtcNow;
-                        OTPGenerator gen = new OTPGenerator(encodedkey, usercontext.UPN, call, algo, this.Duration, this.Digits);  // eg : TOTP code
-                        gen.ComputeOTP(call);
-                        return (Convert.ToInt32(pin) == Convert.ToInt32(gen.Digits));
+                        TOTP gen = new TOTP(encodedkey, usercontext.UPN, call, algo, this.Duration, this.Digits);  // eg : TOTP code
+                        gen.Compute(call);
+                        return (pin == gen.OTP);
                     }
                     else
                     {   // Current TOTP
@@ -901,26 +950,26 @@ namespace Neos.IdentityServer.MultiFactor.Common
                             throw new CryptographicException(string.Format("SECURTY ERROR : Invalid Key for User {0}", usercontext.UPN));
                         byte[] encodedkey = KeysManager.ProbeKey(usercontext.UPN);
                         DateTime tcall = DateTime.UtcNow;
-                        OTPGenerator gen = new OTPGenerator(encodedkey, usercontext.UPN, tcall, algo, this.Duration, this.Digits);  // eg : TOTP code
-                        gen.ComputeOTP(tcall);
-                        if (pin == Convert.ToInt32(gen.Digits))
+                        TOTP gen = new TOTP(encodedkey, usercontext.UPN, tcall, algo, this.Duration, this.Digits);  // eg : TOTP code
+                        gen.Compute(tcall);
+                        if (pin == gen.OTP)
                             return true;
                         // TOTP with Shadow (current - x latest)
                         for (int i = 1; i <= TOTPShadows; i++)
                         {
                             DateTime call = tcall.AddSeconds(-(i * this.Duration));
-                            OTPGenerator gen2 = new OTPGenerator(encodedkey, usercontext.UPN, call, algo, this.Duration, this.Digits);  // eg : TOTP code
-                            gen2.ComputeOTP(call);
-                            if (pin == Convert.ToInt32(gen2.Digits))
+                            TOTP gen2 = new TOTP(encodedkey, usercontext.UPN, call, algo, this.Duration, this.Digits);  // eg : TOTP code
+                            gen2.Compute(call);
+                            if (pin == gen2.OTP)
                                 return true;
                         }
                         // TOTP with Shadow (current + x latest) - not possible. but can be usefull if time sync is not adequate
                         for (int i = 1; i <= TOTPShadows; i++)
                         {
                             DateTime call = tcall.AddSeconds(i * this.Duration);
-                            OTPGenerator gen3 = new OTPGenerator(encodedkey, usercontext.UPN, call, algo, this.Duration, this.Digits);  // eg : TOTP code
-                            gen3.ComputeOTP(call);
-                            if (pin == Convert.ToInt32(gen3.Digits))
+                            TOTP gen3 = new TOTP(encodedkey, usercontext.UPN, call, algo, this.Duration, this.Digits);  // eg : TOTP code
+                            gen3.Compute(call);
+                            if (pin == gen3.OTP)
                                 return true;
                         }
                     }

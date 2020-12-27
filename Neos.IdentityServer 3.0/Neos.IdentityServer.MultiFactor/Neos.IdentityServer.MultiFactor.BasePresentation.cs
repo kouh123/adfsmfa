@@ -27,7 +27,598 @@ using Neos.IdentityServer.MultiFactor.Common;
 
 namespace Neos.IdentityServer.MultiFactor
 {
-    public abstract class BasePresentation : IAdapterPresentation, IAdapterPresentationForm
+    /// <summary>
+    /// AdapterPresentation implementation
+    /// </summary>
+    public class AdapterPresentation : IAdapterPresentation, IAdapterPresentationForm
+    {
+        private BasePresentation _adapter = null;
+        private static List<PlaceHolders> _holders = new List<PlaceHolders>();
+
+        #region Constructors
+        /// <summary>
+        /// Constructor implementation
+        /// </summary>
+        public AdapterPresentation(AuthenticationProvider provider, IAuthenticationContext context)
+        {
+            if (provider == null)
+                throw new ArgumentNullException("Provider");
+            if (provider.Config == null)
+                throw new ArgumentNullException("Config");
+            InitPlaceHolders();
+            switch (provider.Config.UiKind)
+            {
+                case ADFSUserInterfaceKind.Default2019:
+                    _adapter = new AdapterPresentation2019(provider, context)
+                    {
+                        UseUIPaginated = provider.Config.UseUIPaginated
+                    };
+                    break;
+                default:
+                    _adapter = new AdapterPresentationDefault(provider, context)
+                    {
+                        UseUIPaginated = false
+                    };
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Constructor overload implementation
+        /// </summary>
+        public AdapterPresentation(AuthenticationProvider provider, IAuthenticationContext context, string message) : base()
+        {
+            if (provider == null)
+                throw new ArgumentNullException("Provider");
+            if (provider.Config == null)
+                throw new ArgumentNullException("Config");
+            InitPlaceHolders();
+            switch (provider.Config.UiKind)
+            {
+                case ADFSUserInterfaceKind.Default2019:
+                    _adapter = new AdapterPresentation2019(provider, context, message)
+                    {
+                        UseUIPaginated = provider.Config.UseUIPaginated
+                    };
+                    break;
+                default:
+                    _adapter = new AdapterPresentationDefault(provider, context, message)
+                    {
+                        UseUIPaginated = false
+                    };
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Constructor overload implementation
+        /// </summary>
+        public AdapterPresentation(AuthenticationProvider provider, IAuthenticationContext context, string message, bool ismessage)
+        {
+            if (provider == null)
+                throw new ArgumentNullException("Provider");
+            if (provider.Config == null)
+                throw new ArgumentNullException("Config");
+            InitPlaceHolders();
+            switch (provider.Config.UiKind)
+            {
+                case ADFSUserInterfaceKind.Default2019:
+                    _adapter = new AdapterPresentation2019(provider, context, message, ismessage)
+                    {
+                        UseUIPaginated = provider.Config.UseUIPaginated
+                    };
+                    break;
+                default:
+                    _adapter = new AdapterPresentationDefault(provider, context, message, ismessage)
+                    {
+                        UseUIPaginated = false
+                    };
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Constructor overload implementation
+        /// </summary>
+        public AdapterPresentation(AuthenticationProvider provider, IAuthenticationContext context, ProviderPageMode suite)
+        {
+            if (provider == null)
+                throw new ArgumentNullException("Provider");
+            if (provider.Config == null)
+                throw new ArgumentNullException("Config");
+            InitPlaceHolders();
+            switch (provider.Config.UiKind)
+            {
+                case ADFSUserInterfaceKind.Default2019:
+                    _adapter = new AdapterPresentation2019(provider, context, suite)
+                    {
+                        UseUIPaginated = provider.Config.UseUIPaginated
+                    };
+                    break;
+                default:
+                    _adapter = new AdapterPresentationDefault(provider, context, suite)
+                    {
+                        UseUIPaginated = false
+                    };
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Constructor overload implementation
+        /// </summary>
+        public AdapterPresentation(AuthenticationProvider provider, IAuthenticationContext context, string message, ProviderPageMode suite, bool disableoptions = false)
+        {
+            if (provider == null)
+                throw new ArgumentNullException("Provider");
+            if (provider.Config == null)
+                throw new ArgumentNullException("Config");
+            InitPlaceHolders();
+            switch (provider.Config.UiKind)
+            {
+                case ADFSUserInterfaceKind.Default2019:
+                    _adapter = new AdapterPresentation2019(provider, context, message, suite, disableoptions)
+                    {
+                        UseUIPaginated = provider.Config.UseUIPaginated
+                    };
+                    break;
+                default:
+                    _adapter = new AdapterPresentationDefault(provider, context, message, suite, disableoptions)
+                    {
+                        UseUIPaginated = false
+                    };
+                    break;
+            }
+        }
+        #endregion
+
+        #region properties
+        /// <summary>
+        /// IsPermanentFailure property
+        /// </summary>
+        public bool IsPermanentFailure
+        {
+            get { return _adapter.IsPermanentFailure; }
+            internal set { _adapter.IsPermanentFailure = value; }
+        }
+
+        /// <summary>
+        /// IsMessage property
+        /// </summary>
+        public bool IsMessage
+        {
+            get { return _adapter.IsMessage; }
+            internal set { _adapter.IsMessage = value; }
+        }
+
+        /// <summary>
+        /// DisableOptions property
+        /// </summary>
+        public bool DisableOptions
+        {
+            get { return _adapter.DisableOptions; }
+            internal set { _adapter.DisableOptions = value; }
+        }
+
+        /// <summary>
+        /// Provider property
+        /// </summary>
+        public AuthenticationProvider Provider
+        {
+            get { return _adapter.Provider; }
+            internal set { _adapter.Provider = value; }
+        }
+
+        /// <summary>
+        /// Context property
+        /// </summary>
+        public AuthenticationContext Context
+        {
+            get { return _adapter.Context; }
+            internal set { _adapter.Context = value; }
+        }
+
+        /// <summary>
+        /// Resources property
+        /// </summary>
+        public ResourcesLocale Resources
+        {
+            get { return _adapter.Resources; }
+            internal set { _adapter.Resources = value; }
+        }
+        #endregion
+
+        #region Interface implementations
+        /// <summary>
+        /// GetPageTitle implementation
+        /// </summary>
+        public string GetPageTitle(int lcid)
+        {
+            return ReplacePlaceHolders(_adapter.GetPageTitle(lcid));
+        }
+
+        /// <summary>
+        /// GetFormHtml implementation
+        /// </summary>
+        public string GetFormHtml(int lcid)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtml(lcid));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtml implementation
+        /// </summary>
+        public string GetFormPreRenderHtml(int lcid)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtml(lcid));
+        }
+        #endregion
+
+        #region Custom implementations
+        /// <summary>
+        /// GetFormPreRenderHtmlIdentification implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlIdentification(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlIdentification(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlIdentification implementation
+        /// </summary>
+        public string GetFormHtmlIdentification(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlIdentification(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlManageOptions implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlManageOptions(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlManageOptions(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlManageOptions implementation
+        /// </summary>
+        public string GetFormHtmlManageOptions(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlManageOptions(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlRegistration implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlRegistration(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlRegistration(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlRegistration implementation
+        /// </summary>
+        public string GetFormHtmlRegistration(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlRegistration(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlInvitation implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlInvitation(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlInvitation(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlInvitation implementation
+        /// </summary>
+        public string GetFormHtmlInvitation(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlInvitation(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlActivation implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlActivation(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlActivation(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlActivation implementation
+        /// </summary>
+        public string GetFormHtmlActivation(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlActivation(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlSelectOptions implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlSelectOptions(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlSelectOptions(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlSelectOptions implementation
+        /// </summary>
+        public string GetFormHtmlSelectOptions(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlSelectOptions(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlChooseMethod implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlChooseMethod(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlChooseMethod(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlChooseMethod implementation
+        /// </summary>
+        public string GetFormHtmlChooseMethod(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlChooseMethod(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlChangePassword implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlChangePassword(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlChangePassword(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlChangePassword implementation
+        /// </summary>
+        public string GetFormHtmlChangePassword(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlChangePassword(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlBypass implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlBypass(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlBypass(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlBypass implementation
+        /// </summary>
+        public string GetFormHtmlBypass(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlBypass(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlLocking implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlLocking(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlLocking(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlLocking implementation
+        /// </summary>
+        public string GetFormHtmlLocking(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlLocking(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlShowQRCode implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlShowQRCode(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlShowQRCode(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlShowQRCode implementation
+        /// </summary>
+        public string GetFormHtmlShowQRCode(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlShowQRCode(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlSendCodeRequest implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlSendCodeRequest(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlSendCodeRequest(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlSendCodeRequest implementation
+        /// </summary>
+        public string GetFormHtmlSendCodeRequest(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlSendCodeRequest(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlSendBiometricRequest implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlSendBiometricRequest(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlSendBiometricRequest(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlSendBiometricRequest implementation
+        /// </summary>
+        public string GetFormHtmlSendBiometricRequest(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlSendBiometricRequest(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlSendAdministrativeRequest implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlSendAdministrativeRequest(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlSendAdministrativeRequest(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlSendAdministrativeRequest implementation
+        /// </summary>
+        public string GetFormHtmlSendAdministrativeRequest(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlSendAdministrativeRequest(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlSendKeyRequest implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlSendKeyRequest(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlSendKeyRequest(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlSendKeyRequest implementation
+        /// </summary>
+        public string GetFormHtmlSendKeyRequest(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlSendKeyRequest(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlEnrollOTP implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlEnrollOTP(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlEnrollOTP(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlEnrollOTP implementation
+        /// </summary>
+        public string GetFormHtmlEnrollOTP(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlEnrollOTP(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlEnrollEmail implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlEnrollEmail(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlEnrollEmail(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlEnrollEmail implementation
+        /// </summary>
+        public string GetFormHtmlEnrollEmail(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlEnrollEmail(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlEnrollPhone implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlEnrollPhone(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlEnrollPhone(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlEnrollPhone implementation
+        /// </summary>
+        public string GetFormHtmlEnrollPhone(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlEnrollPhone(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlEnrollBio implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlEnrollBio(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlEnrollBio(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlEnrollBio implementation
+        /// </summary>
+        public string GetFormHtmlEnrollBio(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlEnrollBio(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormPreRenderHtmlEnrollPinCode implementation
+        /// </summary>
+        public string GetFormPreRenderHtmlEnrollPinCode(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormPreRenderHtmlEnrollPinCode(usercontext));
+        }
+
+        /// <summary>
+        /// GetFormHtmlEnrollPinCode implementation
+        /// </summary>
+        public string GetFormHtmlEnrollPinCode(AuthenticationContext usercontext)
+        {
+            return ReplacePlaceHolders(_adapter.GetFormHtmlEnrollPinCode(usercontext));
+        }
+        #endregion
+
+        #region PlaceHolders
+        /// <summary>
+        /// ReplacePlaceHolders method implmentation
+        /// </summary>
+        private string ReplacePlaceHolders(string html)
+        {
+            _holders.ForEach(C => html = html.Replace(C.TagName, C.FiledName));
+            return html;
+        }
+
+        /// <summary>
+        /// InitPlaceHolders  method implmentation
+        /// </summary>
+        private void InitPlaceHolders()
+        {
+            if (_holders.Count <= 0)
+            {
+                _holders.Add(new PlaceHolders() { TagName = "##ACCESSCODE##", FiledName = "totp" });
+                _holders.Add(new PlaceHolders() { TagName = "##PINCODE##", FiledName = "pincode" });
+                _holders.Add(new PlaceHolders() { TagName = "##SELECTED##", FiledName = "selected" });
+                _holders.Add(new PlaceHolders() { TagName = "##EMAILADDRESS##", FiledName = "email" });
+                _holders.Add(new PlaceHolders() { TagName = "##PHONENUMBER##", FiledName = "phone" });
+                _holders.Add(new PlaceHolders() { TagName = "##SELECTEDLINK##", FiledName = "selectedlink" });
+                _holders.Add(new PlaceHolders() { TagName = "##OPTIONS##", FiledName = "options" });
+                _holders.Add(new PlaceHolders() { TagName = "##DISABLEMFA##", FiledName = "disablemfa" });
+                _holders.Add(new PlaceHolders() { TagName = "##ISPROVIDER##", FiledName = "isprovider" });
+                _holders.Add(new PlaceHolders() { TagName = "##SELECTOPTIONS##", FiledName = "selectopt" });
+                _holders.Add(new PlaceHolders() { TagName = "##REMEMBER##", FiledName = "remember" });
+                _holders.Add(new PlaceHolders() { TagName = "##SELECTEDRADIO##", FiledName = "selectedradio" });
+                _holders.Add(new PlaceHolders() { TagName = "##OLDPASS##", FiledName = "oldpwdedit" });
+                _holders.Add(new PlaceHolders() { TagName = "##NEWPASS##", FiledName = "newpwdedit" });
+                _holders.Add(new PlaceHolders() { TagName = "##CNFPASS##", FiledName = "cnfpwdedit" });
+                _holders.Add(new PlaceHolders() { TagName = "##MANAGEACCOUNT##", FiledName = "manageaccount" });
+                _holders.Add(new PlaceHolders() { TagName = "##OPTIONITEM##", FiledName = "optionitem" });
+                }
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// BasePresentation implementation
+    /// </summary>
+    public abstract class BasePresentation
     {
         private const string CR = "\r\n";
 
@@ -37,7 +628,7 @@ namespace Neos.IdentityServer.MultiFactor
         protected BasePresentation()
         {
 
-        }
+        } 
 
         /// <summary>
         /// Constructor implementation
@@ -47,15 +638,15 @@ namespace Neos.IdentityServer.MultiFactor
             this.Provider = provider;
             this.Context = new AuthenticationContext(context);
             this.Context.UIMessage = string.Empty;
-            this.IsPermanentFailure = false; // (this.Context.TargetUIMode == ProviderPageMode.DefinitiveError);
-            this.IsMessage = true; // (this.Context.TargetUIMode != ProviderPageMode.DefinitiveError);
+            this.IsPermanentFailure = false; 
+            this.IsMessage = true; 
             this.DisableOptions = false;
             this.Resources = new ResourcesLocale(Context.Lcid);
         }
 
         /// <summary>
         /// Constructor overload implementation
-        /// </summary>
+        /// </summary>       
         protected BasePresentation(AuthenticationProvider provider, IAuthenticationContext context, string message)
         {
             this.Provider = provider;
@@ -70,7 +661,7 @@ namespace Neos.IdentityServer.MultiFactor
         /// <summary>
         /// Constructor overload implementation
         /// </summary>
-        protected BasePresentation(AuthenticationProvider provider, IAuthenticationContext context, string message, bool ismessage)
+        protected BasePresentation(AuthenticationProvider provider, IAuthenticationContext context, string message, bool ismessage)        
         {
             this.Provider = provider;
             this.Context = new AuthenticationContext(context);
@@ -84,7 +675,7 @@ namespace Neos.IdentityServer.MultiFactor
         /// <summary>
         /// Constructor overload implementation
         /// </summary>
-        protected BasePresentation(AuthenticationProvider provider, IAuthenticationContext context, ProviderPageMode suite)
+        public BasePresentation(AuthenticationProvider provider, IAuthenticationContext context, ProviderPageMode suite)
         {
             this.Provider = provider;
             this.Context = new AuthenticationContext(context);
@@ -193,7 +784,7 @@ namespace Neos.IdentityServer.MultiFactor
         public virtual string GetPageTitle(int lcid)
         {
             return Resources.GetString(ResourcesLocaleKind.Titles, "TitlePageTitle");
-        }
+        } 
 
         /// <summary>
         /// GetFormHtmlMessageZone method implementation
@@ -219,11 +810,6 @@ namespace Neos.IdentityServer.MultiFactor
                     else
                         result += "<div id=\"error\" class=\"fieldMargin error smallText\"><label id=\"errorText\" name=\"errorText\" for=\"\">" + usercontext.UIMessage + "</label></div>";
                 }
-              /*  else
-                {
-                    result += "<br/>";
-                    result += "<div id=\"error\" class=\"fieldMargin error smallText\"><label id=\"errorText\" name=\"errorText\" for=\"\"></label></div>";
-                } */
             }
             return result;
         }
@@ -256,10 +842,11 @@ namespace Neos.IdentityServer.MultiFactor
             result += "text-size-adjust: 100%;";
             result += "width: 342px;";
             result += "background-color: transparent;";
-            result += "}" + "\r\n";
+            result += "}" + CR;
             if (!removetag)
-                return "<style>" + result + "</style>";
-            return result + "\r\n";
+                return "<style>" + result + "</style>"+ CR + CR;
+            else
+                return result + CR;
         }
 
         /// <summary>
@@ -275,11 +862,21 @@ namespace Neos.IdentityServer.MultiFactor
             result += "   {" + CR;
             result += "      title.style.display = \"none\";" + CR;
             result += "   }" + CR;
+            if (WebThemeManager.HasRelyingPartyTheme(usercontext))
+            {
+                Dictionary<WebThemeAddressKind, string>  dic = WebThemeManager.GetAddresses(usercontext);
+                if (dic != null)
+                {
+                    result += "   SetIllustrationImage(\"" + dic[WebThemeAddressKind.Illustration].ToString() + "\");" + CR;
+                    result += "   document.getElementById('companyLogo').src = \"" + dic[WebThemeAddressKind.CompanyLogo].ToString() + "\";" + CR;
+                    result += "   document.getElementsByTagName('link')[0].href = \"" + dic[WebThemeAddressKind.StyleSheet].ToString() + "\";" + CR;
+                }
+            } 
             result += "   return true;" + CR;
-            result += "}" + CR;
-            result += "</script>" + CR;
+            result += "}" + CR;         
+            result += "</script>" + CR + CR;
             return result;
-        }
+        }   
 
         /// <summary>
         /// GetFormPreRenderHtmlHeader method implementation
@@ -299,6 +896,7 @@ namespace Neos.IdentityServer.MultiFactor
 
             return result;
         }
+
         /// <summary>
         /// IAdapterPresentationForm GetFormHtml implementation
         /// </summary>
@@ -340,6 +938,7 @@ namespace Neos.IdentityServer.MultiFactor
                     result += GetFormHtmlChangePassword(Context);
                     break;
                 case ProviderPageMode.Bypass:
+                    result += GetFormRenderHtmlHeader(Context);
                     result += GetFormHtmlBypass(Context);
                     break;
                 case ProviderPageMode.Locking:
@@ -430,6 +1029,7 @@ namespace Neos.IdentityServer.MultiFactor
                     result += GetFormPreRenderHtmlChangePassword(Context);
                     break;
                 case ProviderPageMode.Bypass:
+                    result += GetFormPreRenderHtmlHeader(Context);
                     result += GetFormPreRenderHtmlBypass(Context);
                     break;
                 case ProviderPageMode.Locking:
@@ -483,57 +1083,40 @@ namespace Neos.IdentityServer.MultiFactor
         #region Abstract methods
         public abstract string GetFormPreRenderHtmlIdentification(AuthenticationContext usercontext);
         public abstract string GetFormHtmlIdentification(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlRegistration(AuthenticationContext usercontext);
         public abstract string GetFormHtmlRegistration(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlInvitation(AuthenticationContext usercontext);
         public abstract string GetFormHtmlInvitation(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlActivation(AuthenticationContext usercontext);
         public abstract string GetFormHtmlActivation(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlManageOptions(AuthenticationContext usercontext);
         public abstract string GetFormHtmlManageOptions(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlSelectOptions(AuthenticationContext usercontext);
         public abstract string GetFormHtmlSelectOptions(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlChooseMethod(AuthenticationContext usercontext);
         public abstract string GetFormHtmlChooseMethod(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlChangePassword(AuthenticationContext usercontext);
         public abstract string GetFormHtmlChangePassword(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlBypass(AuthenticationContext usercontext);
         public abstract string GetFormHtmlBypass(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlLocking(AuthenticationContext usercontext);
         public abstract string GetFormHtmlLocking(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlSendCodeRequest(AuthenticationContext usercontext);
         public abstract string GetFormHtmlSendCodeRequest(AuthenticationContext usercontext);
         public abstract string GetFormPreRenderHtmlSendBiometricRequest(AuthenticationContext usercontext);
         public abstract string GetFormHtmlSendBiometricRequest(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlSendAdministrativeRequest(AuthenticationContext usercontext);
         public abstract string GetFormHtmlSendAdministrativeRequest(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlSendKeyRequest(AuthenticationContext usercontext);
         public abstract string GetFormHtmlSendKeyRequest(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlEnrollOTP(AuthenticationContext usercontext);
         public abstract string GetFormHtmlEnrollOTP(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlEnrollEmail(AuthenticationContext usercontext);
         public abstract string GetFormHtmlEnrollEmail(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlEnrollPhone(AuthenticationContext usercontext);
         public abstract string GetFormHtmlEnrollPhone(AuthenticationContext usercontext);
-
         public abstract string GetFormPreRenderHtmlEnrollBio(AuthenticationContext Context);
         public abstract string GetFormHtmlEnrollBio(AuthenticationContext Context);
-
         public abstract string GetFormPreRenderHtmlEnrollPinCode(AuthenticationContext usercontext);
         public abstract string GetFormHtmlEnrollPinCode(AuthenticationContext usercontext);
         #endregion
@@ -789,523 +1372,235 @@ namespace Neos.IdentityServer.MultiFactor
             result += "}" + CR;
             return result;
         }
+
+        /// <summary>
+        /// GetWebAuthNSharedScript method implementation
+        /// </summary>
+        public virtual string GetWebAuthNSharedScript(AuthenticationContext usercontext)
+        {
+            string result = string.Empty;
+            result += "function coerceToArrayBuffer(thing, name)" + CR;
+            result += "{" + CR;
+            result += "    if (typeof thing === \"string\")" + CR;
+            result += "    {" + CR;
+            result += "       thing = thing.replace(/-/g, \"+\").replace(/_/g, \"/\");" + CR;
+            result += "       var str = window.atob(thing);" + CR;
+            result += "       var bytes = new Uint8Array(str.length);" + CR;
+            result += "       for (var i = 0; i < str.length; i++)" + CR;
+            result += "       {" + CR;
+            result += "          bytes[i] = str.charCodeAt(i);" + CR;
+            result += "       }" + CR;
+            result += "       thing = bytes;" + CR;
+            result += "    }" + CR;
+            result += "    if (Array.isArray(thing))" + CR;
+            result += "    {" + CR;
+            result += "       thing = new Uint8Array(thing);" + CR;
+            result += "    }" + CR;
+            result += "    if (thing instanceof Uint8Array)" + CR;
+            result += "    {" + CR;
+            result += "       thing = thing.buffer;" + CR;
+            result += "    }" + CR;
+            result += "    if (!(thing instanceof ArrayBuffer))" + CR;
+            result += "    {" + CR;
+            result += "       throw new TypeError(\"could not coerce '\" + name + \"' to ArrayBuffer\");" + CR;
+            result += "    }" + CR;
+            result += "    return thing;" + CR;
+            result += "}" + CR;
+            result += CR;
+
+            result += "function coerceToBase64Url(thing)" + CR;
+            result += "{" + CR;
+            result += "    if (Array.isArray(thing))" + CR;
+            result += "    {" + CR;
+            result += "       thing = Uint8Array.from(thing);" + CR;
+            result += "    }" + CR;
+            result += "    if (thing instanceof ArrayBuffer)" + CR;
+            result += "    {" + CR;
+            result += "       thing = new Uint8Array(thing);" + CR;
+            result += "    }" + CR;
+            result += "    if (thing instanceof Uint8Array)" + CR;
+            result += "    {" + CR;
+            result += "       var str = \"\";" + CR;
+            result += "       var len = thing.byteLength;" + CR;
+            result += "       for (var i = 0; i < len; i++)" + CR;
+            result += "       {" + CR;
+            result += "          str += String.fromCharCode(thing[i]);" + CR;
+            result += "       }" + CR;
+            result += "       thing = window.btoa(str);" + CR;
+            result += "    }" + CR;
+            result += "    if (typeof thing !== \"string\")" + CR;
+            result += "    {" + CR;
+            result += "        throw new Error(\"could not coerce to string\");" + CR;
+            result += "    }" + CR;
+            result += "    thing = thing.replace(/\\+/g, \"-\").replace(/\\//g, \"_\").replace(/=*$/g, \"\");" + CR;
+            result += "    return thing;" + CR;
+            result += "}" + CR;
+            result += CR;
+
+            return result;
+        }
+
+        /// <summary>
+        /// GetWebAuthNAttestationScript method implementation
+        /// </summary>
+        public virtual string GetWebAuthNAttestationScript(AuthenticationContext usercontext)
+        {
+            string result = GetWebAuthNSharedScript(usercontext);
+            result += "async function RegisterWebAuthN(frm)" + CR;
+            result += "{" + CR;
+            result += "   frm.preventDefault();" + CR;
+            result += "   if (detectWebAuthNSupport() === true)" + CR;
+            result += "   {" + CR;
+            result += "      let makeCredentialOptions;" + CR;
+            result += "      try" + CR;
+            result += "      {" + CR;
+            result += "         makeCredentialOptions = " + usercontext.CredentialOptions + ";" + CR;
+            result += "         makeCredentialOptions.challenge = coerceToArrayBuffer(makeCredentialOptions.challenge);" + CR;
+            result += "         makeCredentialOptions.user.id = coerceToArrayBuffer(makeCredentialOptions.user.id);" + CR;
+            result += "         makeCredentialOptions.excludeCredentials = makeCredentialOptions.excludeCredentials.map((c) => {c.id = coerceToArrayBuffer(c.id); return c;});" + CR;
+            result += "        if (makeCredentialOptions.authenticatorSelection.authenticatorAttachment === null)" + CR;
+            result += "           makeCredentialOptions.authenticatorSelection.authenticatorAttachment = undefined;" + CR;
+            result += "      }" + CR;
+            result += "      catch (e)" + CR;
+            result += "      {" + CR;
+            result += "         SetJsError(e.message);" + CR;
+            result += "         return false;" + CR;
+            result += "      }" + CR;
+            result += "      if (makeCredentialOptions.status !== \"ok\")" + CR;
+            result += "      {" + CR;
+            result += "         SetJsError(makeCredentialOptions.errorMessage);" + CR;
+            result += "         return false;" + CR;
+            result += "      }" + CR;
+            result += "      let newCredential;" + CR;
+            result += "      try" + CR;
+            result += "      {" + CR;
+            result += "         newCredential = await navigator.credentials.create({publicKey: makeCredentialOptions});" + CR;
+            result += "         RegisterNewCredentials(newCredential);" + CR;
+            result += "      }" + CR;
+            result += "      catch (e)" + CR;
+            result += "      {" + CR;
+            result += "         SetJsError(e.message);" + CR;
+            result += "         return false;" + CR;
+            result += "      }" + CR;
+            result += "      return true;" + CR;
+            result += "   }" + CR;
+            result += "   else" + CR;
+            result += "   {" + CR;
+            result += "      SetJsError(\"Biometric authentication not supported\");" + CR;
+            result += "      return false;" + CR;
+            result += "   }" + CR;
+            result += "}" + CR;
+            result += CR;
+
+            result += "async function RegisterNewCredentials(newCredential)" + CR;
+            result += "{" + CR;
+            result += "   try" + CR;
+            result += "   {" + CR;
+            result += "      let attestationObject = new Uint8Array(newCredential.response.attestationObject);" + CR;
+            result += "      let clientDataJSON = new Uint8Array(newCredential.response.clientDataJSON);" + CR;
+            result += "      let rawId = new Uint8Array(newCredential.rawId);" + CR;
+            result += "      const data = {id: newCredential.id, rawId: coerceToBase64Url(rawId), type: newCredential.type, " + CR;
+            result += "         extensions: newCredential.getClientExtensionResults()," + CR;
+            result += "         response: { AttestationObject: coerceToBase64Url(attestationObject), clientDataJson: coerceToBase64Url(clientDataJSON) }" + CR;
+            result += "      };" + CR;
+            result += "      OnRefreshPost(3, data);" + CR;
+            result += "   }" + CR;
+            result += "   catch (e)" + CR;
+            result += "   {" + CR;
+            result += "      SetJsError(e.message);" + CR;
+            result += "      return false;" + CR;
+            result += "   }" + CR;
+            result += "   return true;" + CR;
+            result += "}" + CR;
+            result += CR;
+
+            return result;
+        }
+
+        /// <summary>
+        /// GetWebAuthNAssertionScript method implementation
+        /// </summary>
+        public virtual string GetWebAuthNAssertionScript(AuthenticationContext usercontext)
+        {
+            string result = GetWebAuthNSharedScript(usercontext);
+            result += "async function LoginWebAuthN(frm)" + CR;
+            result += "{" + CR;
+            result += "   frm.preventDefault();" + CR;
+            result += "   if (detectWebAuthNSupport() === true)" + CR;
+            result += "   {" + CR;
+            result += "      let makeAssertionOptions;" + CR;
+            result += "      try" + CR;
+            result += "      {" + CR;
+            result += "         makeAssertionOptions = " + usercontext.AssertionOptions + ";" + CR;
+            result += "         const challenge = makeAssertionOptions.challenge.replace(/-/g, \"+\").replace(/_/g, \"/\");" + CR;
+            result += "         makeAssertionOptions.challenge = Uint8Array.from(atob(challenge), c => c.charCodeAt(0));" + CR;
+            result += "         makeAssertionOptions.allowCredentials.forEach(function (listItem)" + CR;
+            result += "         {" + CR;
+            result += "            var fixedId = listItem.id.replace(/_/g, \"/\").replace(/-/g, \"+\");" + CR;
+            result += "            listItem.id = Uint8Array.from(atob(fixedId), c => c.charCodeAt(0));" + CR;
+            result += "         });" + CR;
+            result += "      }" + CR;
+            result += "      catch (e)" + CR;
+            result += "      {" + CR;
+            result += "         SetJsError(e.message);" + CR;
+            result += "         return false;" + CR;
+            result += "      }" + CR;
+            result += "      if (makeAssertionOptions.status !== \"ok\")" + CR;
+            result += "      {" + CR;
+            result += "         SetJsError(makeAssertionOptions.errorMessage);" + CR;
+            result += "         return false;" + CR;
+            result += "      }" + CR;
+            result += "      let credential;" + CR;
+            result += "      try" + CR;
+            result += "      {" + CR;
+            result += "         credential = await navigator.credentials.get({ publicKey: makeAssertionOptions });" + CR;
+            result += "         LoginAssertionCredentials(credential);" + CR;
+            result += "      }" + CR;
+            result += "      catch (e)" + CR;
+            result += "      {" + CR;
+            result += "         SetJsError(e.message);" + CR;
+            result += "         return false;" + CR;
+            result += "      }" + CR;
+            result += "      return true;" + CR;
+            result += "   }" + CR;
+            result += "   else" + CR;
+            result += "   {" + CR;
+            result += "      SetJsError(\"Biometric authentication not supported\");" + CR;
+            result += "      return false;" + CR;
+            result += "   }" + CR;
+            result += "}" + CR;
+            result += CR;
+            result += "async function LoginAssertionCredentials(assertedCredential)" + CR;
+            result += "{" + CR;
+            result += "   try" + CR;
+            result += "   {" + CR;
+            result += "      let authData = new Uint8Array(assertedCredential.response.authenticatorData);" + CR;
+            result += "      let clientDataJSON = new Uint8Array(assertedCredential.response.clientDataJSON);" + CR;
+            result += "      let rawId = new Uint8Array(assertedCredential.rawId);" + CR;
+            result += "      let sig = new Uint8Array(assertedCredential.response.signature);" + CR;
+            result += "      const data = " + CR;
+            result += "      {" + CR;
+            result += "         id: assertedCredential.id," + CR;
+            result += "         rawId: coerceToBase64Url(rawId)," + CR;
+            result += "         type: assertedCredential.type," + CR;
+            result += "         extensions: assertedCredential.getClientExtensionResults()," + CR;
+            result += "         response: { authenticatorData: coerceToBase64Url(authData)," + CR;
+            result += "         clientDataJson: coerceToBase64Url(clientDataJSON)," + CR;
+            result += "         signature: coerceToBase64Url(sig) }" + CR;
+            result += "      };" + CR;
+            result += "      OnRefreshPost(data);" + CR;
+            result += "   }" + CR;
+            result += "   catch (e)" + CR;
+            result += "   {" + CR;
+            result += "      SetJsError(e.message);" + CR;
+            result += "      return false;" + CR;
+            result += "   }" + CR;
+            result += "   return true;" + CR;
+            result += "}" + CR;
+            result += CR;
+
+            return result;
+        }
         #endregion
-    }
-
-    public class AdapterPresentation : BasePresentation
-    {
-        private BasePresentation _adapter = null;
-
-        #region Constructors
-        /// <summary>
-        /// Constructor implementation
-        /// </summary>
-        public AdapterPresentation(AuthenticationProvider provider, IAuthenticationContext context)
-        {
-            if (provider == null)
-                throw new ArgumentNullException("Provider");
-            if (provider.Config == null)
-                throw new ArgumentNullException("Config");
-            switch (provider.Config.UiKind)
-            {
-                case ADFSUserInterfaceKind.Default2019:
-                    _adapter = new AdapterPresentation2019(provider, context);
-                    _adapter.UseUIPaginated = provider.Config.UseUIPaginated;
-                    break;
-                default:
-                    _adapter = new AdapterPresentationDefault(provider, context);
-                    _adapter.UseUIPaginated = false;
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Constructor overload implementation
-        /// </summary>
-        public AdapterPresentation(AuthenticationProvider provider, IAuthenticationContext context, string message)
-        {
-            if (provider == null)
-                throw new ArgumentNullException("Provider");
-            if (provider.Config == null)
-                throw new ArgumentNullException("Config");
-            switch (provider.Config.UiKind)
-            {
-                case ADFSUserInterfaceKind.Default2019:
-                    _adapter = new AdapterPresentation2019(provider, context, message);
-                    _adapter.UseUIPaginated = provider.Config.UseUIPaginated;
-                    break;
-                default:
-                    _adapter = new AdapterPresentationDefault(provider, context, message);
-                    _adapter.UseUIPaginated = false;
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Constructor overload implementation
-        /// </summary>
-        public AdapterPresentation(AuthenticationProvider provider, IAuthenticationContext context, string message, bool ismessage)
-        {
-            if (provider == null)
-                throw new ArgumentNullException("Provider");
-            if (provider.Config == null)
-                throw new ArgumentNullException("Config");
-            switch (provider.Config.UiKind)
-            {
-                case ADFSUserInterfaceKind.Default2019:
-                    _adapter = new AdapterPresentation2019(provider, context, message, ismessage);
-                    _adapter.UseUIPaginated = provider.Config.UseUIPaginated;
-                    break;
-                default:
-                    _adapter = new AdapterPresentationDefault(provider, context, message, ismessage);
-                    _adapter.UseUIPaginated = false;
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Constructor overload implementation
-        /// </summary>
-        public AdapterPresentation(AuthenticationProvider provider, IAuthenticationContext context, ProviderPageMode suite)
-        {
-            if (provider == null)
-                throw new ArgumentNullException("Provider");
-            if (provider.Config == null)
-                throw new ArgumentNullException("Config");
-            switch (provider.Config.UiKind)
-            {
-                case ADFSUserInterfaceKind.Default2019:
-                    _adapter = new AdapterPresentation2019(provider, context, suite);
-                    _adapter.UseUIPaginated = provider.Config.UseUIPaginated;
-                    break;
-                default:
-                    _adapter = new AdapterPresentationDefault(provider, context, suite);
-                    _adapter.UseUIPaginated = false;
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Constructor overload implementation
-        /// </summary>
-        public AdapterPresentation(AuthenticationProvider provider, IAuthenticationContext context, string message, ProviderPageMode suite, bool disableoptions = false)
-        {
-            if (provider == null)
-                throw new ArgumentNullException("Provider");
-            if (provider.Config == null)
-                throw new ArgumentNullException("Config");
-            switch (provider.Config.UiKind)
-            {
-                case ADFSUserInterfaceKind.Default2019:
-                    _adapter = new AdapterPresentation2019(provider, context, message, suite, disableoptions);
-                    _adapter.UseUIPaginated = provider.Config.UseUIPaginated;
-                    break;
-                default:
-                    _adapter = new AdapterPresentationDefault(provider, context, message, suite, disableoptions);
-                    _adapter.UseUIPaginated = false;
-                    break;
-            }
-        }
-        #endregion
-
-        #region properties
-        /// <summary>
-        /// IsPermanentFailure property
-        /// </summary>
-        public override bool IsPermanentFailure
-        {
-            get { return _adapter.IsPermanentFailure; }
-            internal set { _adapter.IsPermanentFailure = value; }
-        }
-
-        /// <summary>
-        /// IsMessage property
-        /// </summary>
-        public override bool IsMessage
-        {
-            get { return _adapter.IsMessage; }
-            internal set { _adapter.IsMessage = value; }
-        }
-
-        /// <summary>
-        /// DisableOptions property
-        /// </summary>
-        public override bool DisableOptions
-        {
-            get { return _adapter.DisableOptions; }
-            internal set { _adapter.DisableOptions = value; }
-        }
-
-        /// <summary>
-        /// Provider property
-        /// </summary>
-        public override AuthenticationProvider Provider
-        {
-            get { return _adapter.Provider; }
-            internal set { _adapter.Provider = value; }
-        }
-
-        /// <summary>
-        /// Context property
-        /// </summary>
-        public override AuthenticationContext Context
-        {
-            get { return _adapter.Context; }
-            internal set { _adapter.Context = value; }
-        }
-
-        /// <summary>
-        /// Resources property
-        /// </summary>
-        public override ResourcesLocale Resources
-        {
-            get { return _adapter.Resources; }
-            internal set { _adapter.Resources = value; }
-        }
-        #endregion
-
-        /// <summary>
-        /// GetPageTitle implementation
-        /// </summary>
-        public override string GetPageTitle(int lcid)
-        {
-            return _adapter.GetPageTitle(lcid);
-        }
-
-        /// <summary>
-        /// GetFormHtml implementation
-        /// </summary>
-        public override string GetFormHtml(int lcid)
-        {
-            return _adapter.GetFormHtml(lcid);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtml implementation
-        /// </summary>
-        public override string GetFormPreRenderHtml(int lcid)
-        {
-            return _adapter.GetFormPreRenderHtml(lcid);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlIdentification implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlIdentification(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlIdentification(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlIdentification implementation
-        /// </summary>
-        public override string GetFormHtmlIdentification(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlIdentification(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlManageOptions implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlManageOptions(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlManageOptions(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlManageOptions implementation
-        /// </summary>
-        public override string GetFormHtmlManageOptions(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlManageOptions(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlRegistration implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlRegistration(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlRegistration(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlRegistration implementation
-        /// </summary>
-        public override string GetFormHtmlRegistration(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlRegistration(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlInvitation implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlInvitation(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlInvitation(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlInvitation implementation
-        /// </summary>
-        public override string GetFormHtmlInvitation(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlInvitation(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlActivation implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlActivation(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlActivation(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlActivation implementation
-        /// </summary>
-        public override string GetFormHtmlActivation(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlActivation(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlSelectOptions implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlSelectOptions(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlSelectOptions(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlSelectOptions implementation
-        /// </summary>
-        public override string GetFormHtmlSelectOptions(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlSelectOptions(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlChooseMethod implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlChooseMethod(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlChooseMethod(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlChooseMethod implementation
-        /// </summary>
-        public override string GetFormHtmlChooseMethod(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlChooseMethod(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlChangePassword implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlChangePassword(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlChangePassword(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlChangePassword implementation
-        /// </summary>
-        public override string GetFormHtmlChangePassword(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlChangePassword(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlBypass implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlBypass(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlBypass(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlBypass implementation
-        /// </summary>
-        public override string GetFormHtmlBypass(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlBypass(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlLocking implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlLocking(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlLocking(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlLocking implementation
-        /// </summary>
-        public override string GetFormHtmlLocking(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlLocking(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlShowQRCode implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlShowQRCode(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlShowQRCode(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlShowQRCode implementation
-        /// </summary>
-        public override string GetFormHtmlShowQRCode(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlShowQRCode(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlSendCodeRequest implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlSendCodeRequest(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlSendCodeRequest(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlSendCodeRequest implementation
-        /// </summary>
-        public override string GetFormHtmlSendCodeRequest(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlSendCodeRequest(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlSendBiometricRequest implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlSendBiometricRequest(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlSendBiometricRequest(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlSendBiometricRequest implementation
-        /// </summary>
-        public override string GetFormHtmlSendBiometricRequest(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlSendBiometricRequest(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlSendAdministrativeRequest implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlSendAdministrativeRequest(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlSendAdministrativeRequest(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlSendAdministrativeRequest implementation
-        /// </summary>
-        public override string GetFormHtmlSendAdministrativeRequest(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlSendAdministrativeRequest(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlSendKeyRequest implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlSendKeyRequest(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlSendKeyRequest(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlSendKeyRequest implementation
-        /// </summary>
-        public override string GetFormHtmlSendKeyRequest(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlSendKeyRequest(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlEnrollOTP implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlEnrollOTP(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlEnrollOTP(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlEnrollOTP implementation
-        /// </summary>
-        public override string GetFormHtmlEnrollOTP(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlEnrollOTP(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlEnrollEmail implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlEnrollEmail(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlEnrollEmail(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlEnrollEmail implementation
-        /// </summary>
-        public override string GetFormHtmlEnrollEmail(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlEnrollEmail(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlEnrollPhone implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlEnrollPhone(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlEnrollPhone(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlEnrollPhone implementation
-        /// </summary>
-        public override string GetFormHtmlEnrollPhone(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlEnrollPhone(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlEnrollBio implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlEnrollBio(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlEnrollBio(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlEnrollBio implementation
-        /// </summary>
-        public override string GetFormHtmlEnrollBio(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlEnrollBio(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormPreRenderHtmlEnrollPinCode implementation
-        /// </summary>
-        public override string GetFormPreRenderHtmlEnrollPinCode(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormPreRenderHtmlEnrollPinCode(usercontext);
-        }
-
-        /// <summary>
-        /// GetFormHtmlEnrollPinCode implementation
-        /// </summary>
-        public override string GetFormHtmlEnrollPinCode(AuthenticationContext usercontext)
-        {
-            return _adapter.GetFormHtmlEnrollPinCode(usercontext);
-        }
     }
 }

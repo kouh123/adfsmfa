@@ -256,6 +256,11 @@ namespace MFA
         public bool UseUIPaginated { get; internal set; }
 
         /// <summary>
+        /// <para type="description">Options when using MFA as primary auth.</para>
+        /// </summary>
+        public PSPrimaryAuthOptions PrimaryAuhenticationOptions { get; set; } = PSPrimaryAuthOptions.None;
+
+        /// <summary>
         /// <para type="description">Force adfsmfa to no Use localization but a specified language.</para>
         /// </summary>
         public string ForcedLanguage { get; set; }
@@ -283,6 +288,7 @@ namespace MFA
                     AdvertisingDays = (PSAdvertisingDays)config.AdvertisingDays,
                     UseUIPaginated = config.UseUIPaginated,
                     UiKind = (PSUIKind)config.UiKind,
+                    PrimaryAuhenticationOptions = (PSPrimaryAuthOptions)config.PrimaryAuhenticationOptions,
                     ForcedLanguage = config.ForcedLanguage
                 };
                 return psconfig;
@@ -313,6 +319,7 @@ namespace MFA
                     AdvertisingDays = (FlatAdvertising)psconfig.AdvertisingDays,
                     UseUIPaginated = psconfig.UseUIPaginated,
                     UiKind = (ADFSUserInterfaceKind)psconfig.UiKind,
+                    PrimaryAuhenticationOptions = (PrimaryAuthOptions)psconfig.PrimaryAuhenticationOptions,
                     ForcedLanguage = psconfig.ForcedLanguage
                 };
                 return config;
@@ -1184,7 +1191,23 @@ namespace MFA
         /// <summary>
         /// <para type="description">Require Resident Key property (boolean).</para>
         /// </summary>
-        public bool RequireResidentKey { get; set; } 
+        public bool RequireResidentKey { get; set; }
+
+        /// <summary>
+        /// <para type="description">Use HMAC encryption.</para>
+        /// </summary>
+        public bool? HmacSecret { get; set; }
+
+        /// <summary>
+        /// <para type="description">Use credential protection.</para>
+        /// </summary>
+        public WebAuthNUserVerification? CredProtect { get; set; }
+
+        /// <summary>
+        /// <para type="description">Force credential protection.</para>
+        /// </summary>
+        public bool? EnforceCredProtect { get; set; }
+
 
         /// <summary>
         /// explicit operator from MMCKeysConfig
@@ -1204,7 +1227,10 @@ namespace MFA
                     UserVerificationIndex = mgr.UserVerificationIndex,
                     Location = mgr.Location,
                     UserVerificationMethod = mgr.UserVerificationMethod,
-                    RequireResidentKey = mgr.RequireResidentKey 
+                    RequireResidentKey = mgr.RequireResidentKey,
+                    HmacSecret = mgr.HmacSecret,
+                    CredProtect = mgr.CredProtect,
+                    EnforceCredProtect = mgr.EnforceCredProtect
                 };
                 return target;
             }
@@ -1229,7 +1255,10 @@ namespace MFA
                     UserVerificationIndex = mgr.UserVerificationIndex,
                     Location = mgr.Location,
                     UserVerificationMethod = mgr.UserVerificationMethod,
-                    RequireResidentKey = mgr.RequireResidentKey
+                    RequireResidentKey = mgr.RequireResidentKey,
+                    HmacSecret = mgr.HmacSecret,
+                    CredProtect = mgr.CredProtect,
+                    EnforceCredProtect = mgr.EnforceCredProtect
                 };
                 return target;
             }
@@ -1372,6 +1401,16 @@ namespace MFA
         public PSHashMode Algorithm { get; set; }
 
         /// <summary>
+        /// <para type="description">TOTP Provider Code len between 4 and 8. 6 by default</para>
+        /// </summary>
+        public int Digits { get; set; }
+
+        /// <summary>
+        /// <para type="description">TOTP Provider Code renew duration in seconds. 30s1 by default</para>
+        /// </summary>
+        public int Duration { get; set; }
+
+        /// <summary>
         /// <para type="description">Set TOP Wizard Application list enabled/ disabled.</para>
         /// </summary>
         public PSOTPWizardOptions WizardOptions { get; set; }
@@ -1405,6 +1444,8 @@ namespace MFA
                     ForceWizard = (PSForceWizardMode)otp.ForceWizard,
                     TOTPShadows = otp.TOTPShadows,
                     Algorithm = (MFA.PSHashMode)otp.Algorithm,
+                    Digits = otp.Digits,
+                    Duration = otp.Duration,
                     PinRequired = otp.PinRequired,
                     WizardOptions = (PSOTPWizardOptions)otp.WizardOptions,
                     FullQualifiedImplementation = otp.FullyQualifiedImplementation,
@@ -1434,6 +1475,8 @@ namespace MFA
                     ForceWizard = (ForceWizardMode)otp.ForceWizard,
                     TOTPShadows = otp.TOTPShadows,
                     Algorithm = (HashMode)otp.Algorithm,
+                    Digits = otp.Digits,
+                    Duration = otp.Duration,
                     PinRequired = otp.PinRequired,
                     WizardOptions = (OTPWizardOptions)otp.WizardOptions,
                     KeySize = (KeySizeMode)otp.KeySize,

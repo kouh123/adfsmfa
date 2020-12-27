@@ -20,11 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.DirectoryServices;
-using System.Linq;
+using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Neos.IdentityServer.MultiFactor
 {   
@@ -126,9 +124,8 @@ namespace Neos.IdentityServer.MultiFactor
                         dsusr.PropertiesToLoad.Add("sAMAccountName");
                         dsusr.PropertiesToLoad.Add("msDS-PrincipalName");
                         dsusr.PropertiesToLoad.Add("userAccountControl");
-                        dsusr.ReferralChasing = ReferralChasingOption.All;
 
-                        if (!string.IsNullOrEmpty(mailattribute))
+                       if (!string.IsNullOrEmpty(mailattribute))
                             dsusr.PropertiesToLoad.Add(mailattribute);
                         else
                         {
@@ -143,7 +140,7 @@ namespace Neos.IdentityServer.MultiFactor
                             dsusr.PropertiesToLoad.Add("otherMobile");
                             dsusr.PropertiesToLoad.Add("telephoneNumber");
                         }
-                        dsusr.SizeLimit = 0; // _host.MaxRows;
+                        dsusr.SizeLimit = 0; // _host.MaxRows; 
 
                         SearchResultCollection src = dsusr.FindAll();
                         if (src != null)
@@ -303,6 +300,97 @@ namespace Neos.IdentityServer.MultiFactor
     public interface IDependency
     {
         EventLog GetEventLog();
+    }
+    #endregion
+
+    #region WebThemes service
+    [DataContract]
+    public enum WebThemeAddressKind
+    {
+        [EnumMember]
+        Illustration = 0,
+
+        [EnumMember]
+        CompanyLogo = 1,
+
+        [EnumMember]
+        StyleSheet = 2
+    }
+
+    /// <summary>
+    /// WebThemesParametersRecord class implementation
+    /// </summary>
+    [DataContract]
+    public class WebThemesParametersRecord
+    {
+        [DataMember]
+        public int LCID { get; set; }
+
+        [DataMember]
+        public string Identifier { get; set; }
+    }
+
+    /// <summary>
+    /// WebThemeRecord class implementation
+    /// </summary>
+    [DataContract]
+    public class WebThemeRecord
+    {
+        [DataMember]
+        public string Name { get; set; }
+
+        [DataMember]
+        public string Identifier { get; set; }
+
+        [DataMember]
+        public string ObjectId { get; set; }
+
+        [DataMember]
+        public bool IsBuiltinTheme { get; set; } = false;
+
+        [DataMember]
+        public IDictionary<string, string> StyleSheetUri { get; set; }
+
+        [DataMember]
+        public IDictionary<string, string> LogoImageUri { get; set; }
+
+        [DataMember]
+        public IDictionary<string, string> IllustrationImageUri { get; set; }
+    }
+
+    [ServiceContract(Namespace = "http://adfsmfa.org", Name = "WebThemes")]
+    public interface IWebThemeManager
+    {
+        [OperationContract]
+        bool Initialize(Dictionary<string, bool> servers, WebThemesParametersRecord context, string request, out string identifier);
+
+        [OperationContract]
+        bool HasRelyingPartyTheme(WebThemesParametersRecord context);
+
+        [OperationContract]
+        string GetIllustrationAddress(WebThemesParametersRecord context);
+
+        [OperationContract]
+        string GetLogoAddress(WebThemesParametersRecord context);
+
+        [OperationContract]
+        string GetStyleSheetAddress(WebThemesParametersRecord context);
+
+        [OperationContract]
+        Dictionary<WebThemeAddressKind, string> GetAddresses(WebThemesParametersRecord context);
+
+        [OperationContract]
+        void DispachTheme(WebThemeRecord theme);
+
+        [OperationContract]
+        WebThemeRecord RequestTheme(WebThemesParametersRecord theme);
+
+        [OperationContract]
+        void ResetThemes();
+
+        [OperationContract]
+        void ResetThemesList(Dictionary<string, bool> servers);
+
     }
     #endregion
 }
